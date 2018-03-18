@@ -28,11 +28,15 @@ Vue.component('app-footer', {
     template: `
         <footer>
             <div class="container">
-                <p>Copyright &copy; Flask Inc.</p>
+                <p>Copyright &copy {{ year }} Flask Inc.</p>
             </div>
         </footer>
     `,
-    data: function() {}
+    data: function() {
+        return {
+            year: (new Date).getFullYear()
+        }
+    }
 })
 
 
