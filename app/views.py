@@ -13,9 +13,16 @@ from flask import render_template, request, redirect, url_for, flash
 # Routing for your application.
 ###
 
-@app.route('/')
-def index():
-    """Render the initial webpage and then let VueJS take control."""
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def index(path):
+    """
+    Because we use HTML5 history mode in vue-router we need to configure our
+    web server to redirect all routes to index.html. Hence the additional route
+    "/<path:path".
+
+    Also we will render the initial webpage and then let VueJS take control.
+    """
     return app.send_static_file('index.html')
 
 
