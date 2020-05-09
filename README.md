@@ -1,5 +1,4 @@
-# Lab 6 - VueJS
-The goal of this lab is to become familiar with VueJS.
+# Project 2
 
 Remember to always create a virtual environment and install the packages in your requirements file
 
