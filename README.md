@@ -1,4 +1,9 @@
-# Project 2
+# Project 2 - Photogram
+**Developers**  
+* Rowan Atkinson
+* Nathaniel Christie
+* Gabrielle Higgins
+* Rajheem O'Connor
 
 Remember to always create a virtual environment and install the packages in your requirements file
 
@@ -41,9 +46,12 @@ python flask-migrate.py db migrate
 python flask-migrate.py db upgrade
 ```
 
-If you wish to update your database model, modify the models.py file, then run:
+If you wish to update your database model, modify the [models.py](app\models.py) file, then run:
 
 ```
 python flask-migrate.py db migrate
 python flask-migrate.py db upgrade
 ```
+
+## More info
+A description of how the API should work can be found [here](https://photogram.docs.apiary.io/#)
