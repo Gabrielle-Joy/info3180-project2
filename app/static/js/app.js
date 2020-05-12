@@ -41,11 +41,114 @@ Vue.component('app-footer', {
     }
 })
 
-
-let app = new Vue({
-    el: '#app',
-    data: {
-        welcome: 'Hello World! Welcome to VueJS'
-    }
+/* Router Components */
+const Home = Vue.component('home', {
+  template: `
+  <div>
+      <h1>Hello there! Welcome to Photogram!</h1>
+  </div>
+  `,
+  data: function () {
+      return {}
+  }
 });
 
+const Register = Vue.component('register', {
+  template: `
+  <div>
+      <h1>Register</h1>
+  </div>
+  `,
+  data: function () {
+      return {}
+  }
+});
+
+const Login = Vue.component('login', {
+  template: `
+  <div>
+      <h1>Login</h1>
+  </div>
+  `,
+  data: function () {
+      return {}
+  }
+});
+const Logout = Vue.component('logout', {
+  template: `
+  <div>
+      <h1>Logout: may need sumn special</h1>
+  </div>
+  `,
+  data: function () {
+      return {}
+  }
+});
+
+const Explore = Vue.component('explore', {
+  template: `
+  <div>
+      <h1>Dora di explora!</h1>
+  </div>
+  `,
+  data: function () {
+      return {}
+  }
+});
+
+const User = Vue.component('user', {
+  template: `
+  <div>
+      <h1>User:I will find you</h1>
+  </div>
+  `,
+  data: function () {
+      return {}
+  }
+});
+
+const Post = Vue.component('post', {
+  template: `
+  <div>
+      <h1>Post: time to give out my INFOO</h1>
+  </div>
+  `,
+  data: function () {
+      return {}
+  }
+});
+
+const NotFound = Vue.component('not-found', {
+  template: `
+  <div>
+      <h1>404 - Not Found</h1>
+  </div>
+  `,
+  data: function () {
+      return {}
+  }
+})
+
+
+// Define Routes
+const router = new VueRouter({
+  mode: 'history',
+  routes: [
+      {path: "/", component: Home},
+      {path: "/register", component: Register},
+      {path: "/login", component: Login},
+      {path: "/logout", component: Logout},
+      {path: "/explore", component: Explore},
+      {path: "/users/:user_id", component: User},
+      {path: "/posts/new", component: Post},
+
+      // This is a catch all route in case none of the above matches
+      {path: "*", component: NotFound}
+  ]
+});
+
+// Instantiate our main Vue Instance
+let app = new Vue({
+  el: "#app",
+  router
+});
