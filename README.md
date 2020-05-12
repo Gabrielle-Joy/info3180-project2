@@ -24,3 +24,19 @@ Database Name: info3180-proj2
 
 Configure a database on your local system with the above properties. pgAdmin 4 is a GUI that can
 be used to do this.
+
+## Running Flask-Migrate
+Once your database is set up (preferably as above), run these commands
+
+```
+python flask-migrate.py db init
+python flask-migrate.py db migrate
+python flask-migrate.py db upgrade
+```
+
+If you wish to update your database model, modify the models.py file, then run:
+
+```
+python flask-migrate.py db migrate
+python flask-migrate.py db upgrade
+```

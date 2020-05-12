@@ -4,7 +4,22 @@ from werkzeug.security import generate_password_hash
 
 
 class Post(db.Model):
-    
+    __tablename__ = 'posts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    photo = db.Column(db.String(120), nullable=False)
+    caption = db.Column(db.String(150))
+    created_on = db.Column(db.Date())
+
+    def __init__(self, user_id, photo, caption):
+        self.user_id = user_id
+        self.photo = photo
+        self.caption = caption
+        self.created_on = date.today()
+
+    def __repr__(self):
+        return '<ID {0}\nUserID {1}\nPhoto {2}>'.format(self.id, self.user_id, self.photo)
 
 class User(db.Model):
     # You can use this to change the table name. The default convention is to use
@@ -54,3 +69,31 @@ class User(db.Model):
 
     def __repr__(self):
         return '<ID {0}\nUser {1} {2}>'.format(self.id, self.first_name, self.last_name)
+
+class Like(db.Model):
+    __tablename__ = 'likes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    post_id = db.Column(db.Integer, nullable=False)
+
+    def __init__(self, user_id, post_id):
+        self.user_id = user_id
+        self.post_id = post_id
+
+    def __repr__(self):
+        return '<ID {0}\nUserID {1}\nPostID {2}>'.format(self.id, self.user_id, self.post_id)
+
+class Follow(db.Model):
+    __tablename__ = 'follows'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    follower_id = db.Column(db.Integer, nullable=False)
+
+    def __init__(self, user_id, post_id):
+        self.user_id = user_id
+        self.follower_id = post_id
+
+    def __repr__(self):
+        return '<ID {0}\nUserID {1}\nFollowerID {2}>'.format(self.id, self.user_id, self.follower_id)

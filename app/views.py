@@ -6,6 +6,7 @@ This file creates your application.
 """
 
 from app import app
+from app.models import User, Post, Like, Follow
 from flask import render_template, request, redirect, url_for, flash
 
 
