@@ -23,7 +23,14 @@ Database Name: info3180-proj2
 ```
 
 Configure a database on your local system with the above properties. pgAdmin 4 is a GUI that can
-be used to do this.
+be used to do this. Alternatively, use the following commandline instructions in PostgreSQL
+
+```
+create user "proj2-user";
+create database "info3180-proj2";
+\password unlocked {you'll have to wait for postgres to prompt this}
+alter database "info3180-proj2" owner to "proj2-user";
+```
 
 ## Running Flask-Migrate
 Once your database is set up (preferably as above), run these commands
