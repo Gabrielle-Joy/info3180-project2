@@ -5,14 +5,65 @@ Werkzeug Documentation:  http://werkzeug.pocoo.org/documentation/
 This file creates your application.
 """
 
-from app import app
+import os
+import jwt
+import datetime
+from app import app, db
+from app.utils import *
 from app.models import User, Post, Like, Follow
-from flask import render_template, request, redirect, url_for, flash
-
+from flask import jsonify, render_template, request, url_for, make_response
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 
 ###
 # Routing for your application.
 ###
+
+@app.route('/api/users/register', methods=["POST"])
+def register():
+    pass
+
+@app.route('/api/auth/login', methods=["POST"])
+def login():
+    # jwt practice - rough idea. Need to accept login, generate token, rollout
+    auth = request.json
+
+    if auth and auth["password"] == 'password':
+        token = jwt.encode({'user': auth["username"], 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'])
+        return jsonify({'token': token.decode('UTF-8')})
+    return make_response('Could not verify!', 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
+
+@app.route('/api/auth/logout', methods=["GET"])
+@auth_required
+def logout():
+    pass
+
+
+@app.route('/api/users/<int:user_id>/posts', methods=["POST"])
+@auth_required
+def add_post(user_id):
+    pass
+
+@app.route('/api/users/<int:user_id>/posts', methods=["GET"])
+@auth_required
+def get_post(user_id):
+    pass
+
+@app.route('/api/users/<int:user_id>/follow', methods=["POST"])
+@auth_required
+def follow_user(user_id):
+    pass
+
+@app.route('/api/posts', methods=["GET"])
+@auth_required
+def all_posts():
+    return {'message': 'not too bad champ'}
+
+
+@app.route('/api/posts/<int:post_id>/like', methods=["POST"])
+@auth_required
+def like_post(post_id):
+    pass
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
@@ -25,7 +76,6 @@ def index(path):
     Also we will render the initial webpage and then let VueJS take control.
     """
     return app.send_static_file('index.html')
-
 
 ###
 # The functions below should be applicable to all Flask apps.
