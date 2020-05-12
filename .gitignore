@@ -14,3 +14,7 @@ venv/
 
 # VS Code Settings
 .vscode
+
+# ignore image files
+*.png
+*.jpg
