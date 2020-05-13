@@ -15,6 +15,6 @@ venv/
 # VS Code Settings
 .vscode
 
-# ignore image files
-*.png
-*.jpg
+# ignore image files uploaded by photogram user
+uploads/*.png
+uploads/*.jpg
