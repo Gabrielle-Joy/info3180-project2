@@ -34,8 +34,8 @@ def register():
             User_e=User.query.filter_by(email=email).first()
             if user_e is None:
                 location=request.form['location']
-                biography=request,form['bio']
-                f = request.files['profile_pic']
+                biography=request.form['bio']
+                f = request.files['profile_picture']
                 filename = secure_filename(f.filename)
                 f.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
                 new_user=User(firstname,lastname,username,password,email,location,biography,filename)
@@ -44,6 +44,10 @@ def register():
                 return jsonify({
                     'message':'User successfully registered'
                     })
+    return jsonify({
+        'message':'User not created',
+        'errors':form_errors(form)
+        })
 
 @app.route('/api/auth/login', methods=["POST"])
 def login():
