@@ -11,6 +11,7 @@ import datetime
 from app import app, db
 from app.utils import *
 from app.models import User, Post, Like, Follow
+from app.forms import *
 from flask import jsonify, render_template, request, url_for, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -21,17 +22,42 @@ from werkzeug.utils import secure_filename
 
 @app.route('/api/users/register', methods=["POST"])
 def register():
-    pass
+    form=RegisterForm()
+    if form.validate_on_submit() :
+        firstname=request.form['first_name']
+        lastname=request.form['last_name']
+        username=request.form['username']
+        user_n=User.query.filter_by(username=username).first()
+        if user_n is None:
+            password=request.form['password']
+            email=request.form['email']
+            User_e=User.query.filter_by(email=email).first()
+            if user_e is None:
+                location=request.form['location']
+                biography=request,form['bio']
+                f = request.files['profile_pic']
+                filename = secure_filename(f.filename)
+                f.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
+                new_user=User(firstname,lastname,username,password,email,location,biography,filename)
+                db.session.add(new_user)
+                db.session.commit()
+                return jsonify({
+                    'message':'User successfully registered'
+                    })
 
 @app.route('/api/auth/login', methods=["POST"])
 def login():
     # jwt practice - rough idea. Need to accept login, generate token, rollout
     auth = request.json
-
-    if auth and auth["password"] == 'password':
-        token = jwt.encode({'user': auth["username"], 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'])
-        return jsonify({'token': token.decode('UTF-8')})
-    return make_response('Could not verify!', 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
+    form=LoginForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        user = UserProfile.query.filter_by(username=username).first()
+        if user is not None and check_password_hash(user.password, password):
+            token = jwt.encode({'userid': auth["userid"], 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'])
+            return jsonify({'token': token.decode('UTF-8')})
+        return make_response('Could not verify!', 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
 
 @app.route('/api/auth/logout', methods=["GET"])
 @auth_required
