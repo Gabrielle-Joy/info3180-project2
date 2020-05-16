@@ -33,7 +33,7 @@ be used to do this. Alternatively, use the following commandline instructions in
 ```
 create user "proj2-user";
 create database "info3180-proj2";
-\password unlocked {you'll have to wait for postgres to prompt this}
+\password proj2-user {here we change the password for proj2-user}
 alter database "info3180-proj2" owner to "proj2-user";
 ```
 
