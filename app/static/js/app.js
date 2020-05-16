@@ -4,7 +4,7 @@ Vue.component('app-header', {
       <header>
           <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
             <a class="navbar-brand" href="/">
-              <img src="../static/images/interface.png" class="nav-logo d-inline-block align-top" alt="mkk"/>
+              <img src="../static/images/interface.png" class="nav-logo d-inline-block align-top" width="30" height="30" alt="mkk"/>
               Photogram
             </a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
