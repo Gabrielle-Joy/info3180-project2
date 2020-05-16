@@ -10,7 +10,8 @@ import jwt
 import datetime
 from app import app, db
 from app.utils import *
-from app.models import User, Post, Like, Follow
+from app.forms import *
+from app.models import *
 from flask import jsonify, render_template, request, url_for, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -29,7 +30,7 @@ def login():
     auth = request.json
 
     if auth and auth["password"] == 'password':
-        token = jwt.encode({'user': auth["username"], 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'])
+        token = jwt.encode({'user_id': auth["user_id"], 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'])
         return jsonify({'token': token.decode('UTF-8')})
     return make_response('Could not verify!', 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
 
@@ -52,7 +53,37 @@ def get_post(user_id):
 @app.route('/api/users/<int:user_id>/follow', methods=["POST"])
 @auth_required
 def follow_user(user_id):
-    pass
+    data = request.json
+    target_id = data['follower_id']
+    tar_user = User.query.get(target_id)
+
+    # ensure the target user exists in the db, and the requesting user
+    # is verified by the token
+    if validateUser(user_id) and user_id == data['user_id']:
+        follow = Follow(user_id, target_id)
+        db.session.add(follow)
+        db.session.commit()
+        return jsonify({"message": "You are now following that user"})
+    else:
+        return jsonify({'code': -1, 'message': 'Invalid request', 'errors': [] })
+
+
+
+
+
+def validateUser(user_id):
+    """Ensures the user_id passed matches the user_id in token. Returns
+    true if it matches, false otherwise"""
+    auth = request.headers.get('Authorization', None)
+    token = auth.split[1]
+    try:
+        payload = jwt.decode(token, app.config['SECRET_KEY'], verify=False)
+        if payload["user_id"] == user_id:
+            return True
+        else:
+            return False
+    except:
+        return False
 
 @app.route('/api/posts', methods=["GET"])
 @auth_required

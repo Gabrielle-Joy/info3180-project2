@@ -39,12 +39,11 @@ class User(db.Model):
     profile_picture = db.Column(db.String(120), nullable=False) # stores the name of the image file to be rendered
     date_created = db.Column(db.Date())
 
-    def __init__(self, username, password, first_name, last_name, gender, email, location, biography, profile_picture):
+    def __init__(self, username, password, first_name, last_name, email, location, biography, profile_picture):
         self.username = username
         self.password = generate_password_hash(password, method='pbkdf2:sha256')
         self.first_name = first_name
         self.last_name = last_name
-        self.gender = gender
         self.email = email
         self.location = location
         self.biography = biography
