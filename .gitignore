@@ -10,7 +10,7 @@ Thumbs.db
 venv/
 
 # PyCharm Settings
-.idea
+.ideave
 
 # VS Code Settings
 .vscode
