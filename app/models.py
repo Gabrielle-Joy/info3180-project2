@@ -28,6 +28,9 @@ class User(db.Model):
     # to `users` (plural) or some other name.
     __tablename__ = 'users'
 
+    class Meta:
+        csrf = False
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(30), nullable=False, unique=True)
     password = db.Column(db.String(200), nullable=False)
