@@ -22,10 +22,10 @@ from werkzeug.utils import secure_filename
 
 @app.route('/api/users/register', methods=["POST"])
 def register():
-    form=RegisterForm()
+    form = RegisterForm()
     if form.validate_on_submit() :
-        firstname=request.form['first_name']
-        lastname=request.form['last_name']
+        firstname=request.form['fname']
+        lastname=request.form['lname']
         username=request.form['username']
         user_n=User.query.filter_by(username=username).first()
         if user_n is None:
@@ -35,7 +35,7 @@ def register():
             if user_e is None:
                 location=request.form['location']
                 biography=request,form['bio']
-                f = request.files['profile_pic']
+                f = request.files['photo']
                 filename = secure_filename(f.filename)
                 f.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
                 new_user=User(firstname,lastname,username,password,email,location,biography,filename)
