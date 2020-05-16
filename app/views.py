@@ -23,30 +23,36 @@ from werkzeug.utils import secure_filename
 @app.route('/api/users/register', methods=["POST"])
 def register():
     form = RegisterForm()
+    errors = []
     if form.validate_on_submit() :
-        firstname=request.form['fname']
-        lastname=request.form['lname']
+        firstname=request.form['first_name']
+        lastname=request.form['last_name']
         username=request.form['username']
         user_n=User.query.filter_by(username=username).first()
         if user_n is None:
             password=request.form['password']
             email=request.form['email']
-            User_e=User.query.filter_by(email=email).first()
+            user_e=User.query.filter_by(email=email).first()
             if user_e is None:
-                location=request.form['location']
-                biography=request,form['bio']
-                f = request.files['photo']
+                location = request.form['location']
+                biography = request.form['bio']
+                f = request.files['profile_picture']
                 filename = secure_filename(f.filename)
                 f.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
-                new_user=User(firstname,lastname,username,password,email,location,biography,filename)
+                new_user = User(first_name=firstname, last_name=lastname, username=username, password=password, 
+                                email=email, location=location, biography=biography, profile_picture=filename)
                 db.session.add(new_user)
                 db.session.commit()
                 return jsonify({
                     'message':'User successfully registered'
                     })
+            else:
+                errors.append("Email already in use")
+        else:
+            errors.append('Username already in use')
     return jsonify({
         'message':'User not created',
-        'errors':form_errors(form)
+        'errors':form_errors(form) + errors
         })
 
 @app.route('/api/auth/login', methods=["POST"])
