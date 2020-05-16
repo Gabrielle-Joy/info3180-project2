@@ -39,7 +39,7 @@ def register():
                 f = request.files['profile_picture']
                 filename = secure_filename(f.filename)
                 f.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
-                new_user = User(first_name=firstname, last_name=lastname, username=username, password=password, 
+                new_user = User(first_name=firstname, last_name=lastname, username=username, password=password,
                                 email=email, location=location, biography=biography, profile_picture=filename)
                 db.session.add(new_user)
                 db.session.commit()
@@ -61,9 +61,9 @@ def login():
     if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
-        user = UserProfile.query.filter_by(username=username).first()
+        user = User.query.filter_by(username=username).first()
         if user is not None and check_password_hash(user.password, password):
-            token = jwt.encode({'userid': auth["userid"], 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'])
+            token = jwt.encode({'user_id': user.id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'])
             return jsonify({'token': token.decode('UTF-8')})
         return make_response('Could not verify!', 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
 
