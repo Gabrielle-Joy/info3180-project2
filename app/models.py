@@ -89,9 +89,9 @@ class Follow(db.Model):
     user_id = db.Column(db.Integer, nullable=False)
     follower_id = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, user_id, post_id):
+    def __init__(self, user_id, follower_id):
         self.user_id = user_id
-        self.follower_id = post_id
+        self.follower_id = follower_id
 
     def __repr__(self):
         return '<ID {0}\nUserID {1}\nFollowerID {2}>'.format(self.id, self.user_id, self.follower_id)
