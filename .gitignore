@@ -8,6 +8,7 @@ Thumbs.db
 # virtualenv
 .venv/
 venv/
+env/
 
 # PyCharm Settings
 .ideave

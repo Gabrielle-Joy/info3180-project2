@@ -108,8 +108,7 @@ const Home = Vue.component('home', {
 
 const Register = Vue.component('register', {
   template: `
-  <div id="register">
-    <slot 
+  <div class="center-form">
     <div class="page-header text-shadow">
       <h3>Register</h3>
     </div>
@@ -175,7 +174,7 @@ const Register = Vue.component('register', {
         // console.log(messages)
 
         // send api request
-        fetch('api/register', {
+        fetch('api/users/register', {
             method: "POST",
             body: form,
             headers: {
@@ -205,12 +204,68 @@ const Register = Vue.component('register', {
 
 const Login = Vue.component('login', {
   template: `
-  <div>
-      <h1>Login</h1>
+  <div class="center-form">
+    <div class="page-header">
+      <h3>Login</h3>
+    </div>
+
+    <div class="border border-info p-3 bg-light rounded shadow">
+      <form @submit.prevent="login_user()" id="login-form">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" class="form-control" name="username" id="username">
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" class="form-control" name="password" id="password">
+        </div>
+        <div class="mt-2">
+          <hr>
+          <button type="submit" class="btn btn-info btn-lg">Login</button>
+        </div>
+        
+      </form>
+    </div>
   </div>
   `,
   data: function () {
       return {}
+  },
+  methods: {
+    login_user () {
+      el = document.getElementById('login-form')
+      form = new FormData(el)
+      // this.errorList = ["KILL"]
+      // console.log(this.errors)
+      // this.messages = ["SUCCESSSSS!!"]
+      // console.log(messages)
+
+      // send api request
+      fetch('api/users/login', {
+          method: "POST",
+          body: form,
+          headers: {
+              'X-CSRFToken': token
+          },
+          credentials: 'same-origin'
+      })
+      .then(res => {
+          return res.json()
+      })
+      .then(res => {
+          console.log(res)
+          if(res.status == 201) {
+              // successful register
+              // messages = [res.message]
+              // messages = ["SUCCESSSSS!!"]
+              router.push({name: 'home'})
+          } else {
+              // failed register
+              // errors = ["ERROR!!"]
+              // errors = [res.errors]
+          }
+      })
+    }
   }
 });
 const Logout = Vue.component('logout', {
@@ -248,12 +303,70 @@ const User = Vue.component('user', {
 
 const Post = Vue.component('post', {
   template: `
-  <div>
-      <h1>Post: time to give out my INFOO</h1>
+  <div class="center-form">
+    <div class="page-header">
+      <h3>New Post</h3>
+    </div>
+
+    <div class="border border-info p-3 bg-light rounded shadow">
+      <form @submit.prevent="login_user()" id="post-form">
+        <div class="form-group">
+          <label for="photo">Photo</label>
+          <input type="file" class="form-control-file" name="photo" id="photo">
+        </div>
+
+        <div class="form-group">
+          <label for="caption">Caption</label>
+          <textarea 
+            name="caption" id="caption" 
+            rows="5" 
+            class="form-control" 
+            placeholder="Enter a caption for your post"
+          ></textarea>
+        </div>
+        
+      </form>
+    </div>
   </div>
   `,
   data: function () {
       return {}
+  },
+  methods: {
+    login_user () {
+      el = document.getElementById('post-form')
+      form = new FormData(el)
+      // this.errorList = ["KILL"]
+      // console.log(this.errors)
+      // this.messages = ["SUCCESSSSS!!"]
+      // console.log(messages)
+
+      // send api request
+      fetch(`api/users/${user_id}/posts`, {
+          method: "POST",
+          body: form,
+          headers: {
+              'X-CSRFToken': token
+          },
+          credentials: 'same-origin'
+      })
+      .then(res => {
+          return res.json()
+      })
+      .then(res => {
+          console.log(res)
+          if(res.status == 201) {
+              // successful register
+              // messages = [res.message]
+              // messages = ["SUCCESSSSS!!"]
+              router.push({name: 'home'})
+          } else {
+              // failed register
+              // errors = ["ERROR!!"]
+              // errors = [res.errors]
+          }
+      })
+    }
   }
 });
 
