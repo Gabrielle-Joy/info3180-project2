@@ -56,7 +56,7 @@ Vue.component('app-header', {
 
 Vue.component('app-footer', {
     template: `
-        <footer>
+        <footer class="mt-5">
             <div class="container">
                 <p>Copyright &copy {{ year }} Flask Inc.</p>
             </div>
@@ -301,6 +301,135 @@ const User = Vue.component('user', {
   }
 });
 
+const Profile = Vue.component('profile', {
+  template: `
+  <div>
+    <div class="card shadow mb-5">
+    
+      <div class="card-top rounded border-primary"></div>
+
+      <div class="row no-gutters p-4" style="width: auto;">
+
+        <div class="col-md-2">
+          <img 
+            src="https://api.time.com/wp-content/uploads/2017/12/terry-crews-person-of-year-2017-time-magazine-2.jpg" 
+            class="card-img" 
+            alt="profile-picture"
+          >
+        </div>
+
+        <div class="col-md-10 d-flex">
+          <div class="card-body w-50">
+            <h3 class="card-title text-dark font-weight-bold ">{{ 'Terry' + " " + 'Crews' }}</h3>
+            <div class="text-secondary">
+
+              <div class="d-flex align-items-center mb-2">
+                <i class="fas fa-map-marker-alt"></i>
+                <p class="card-text ml-3">{{ 'tcrews@mail.com' }}</p>
+              </div>
+              
+              <div class="d-flex align-items-center mb-2">
+                <i class="far fa-envelope card-text"></i>
+                <p class="card-text ml-3">{{ 'Portmore' }}</p>
+              </div>
+
+              <div class="d-flex align-items-center">
+                <i class="far fa-calendar"></i>
+                <p class="card-text ml-3">joined on {{ 'May 18, 2020' }}</p> 
+              </div>
+
+              <div class="d-flex align-items-center mt-3">
+                <p>{{ 'Bio Here...' }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-body p-5">
+            <div class="d-flex mb-5">
+              <div class="w-50 text-center">
+                <p>{{ posts.length }}</p>
+                <p class="text-muted">Posts</p>
+              </div>
+
+              <div class="w-50 text-center">
+                <p>{{ followers }}</p>
+                <p class="text-muted">Followers</p>
+              </div>
+            </div>  
+
+            <div>
+              <button @click="follow()" class="btn btn-primary btn-block">Follow</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+   <!-- posts -->
+    <div
+      v-for="(row, index) in photorows"
+      :key="index"
+    >
+      <div class="card-deck">
+        <div v-for="(post, pindex) in row" :key="pindex">
+          <div 
+            class="card"
+            v-if="post"
+          >
+            <img 
+              class="profile-post"
+              :src="post.photo" 
+              :alt="'photo'"
+            >
+          </div>
+
+          <div 
+            v-else
+            class="card bg-transparent border-0"
+          ></div>
+        </div> 
+      </div>
+    </div>
+  </div>
+  `,
+  data: function () {
+      return {
+        followers: 10,
+        rowlen: 3,
+        posts: [
+          {
+            photo: 'https://pbs.twimg.com/media/Dwv-JlDUUAA-8FK.jpg',
+            caption: 'THis is a post about a dog'
+          },
+          {
+            photo: 'https://www.biography.com/.image/t_share/MTE5NDg0MDYwNjkzMjY3OTgz/terry-crews-headshot-600x600jpg.jpg',
+            caption: "Headshot I took for my first acting audition"
+          }
+        ]
+      }
+  },
+  computed: {
+    rows () {
+      return Math.floor((this.posts.length - 1) / this.rowlen) + 1
+    },
+    photorows () {
+      const prows = []
+      for (let index = 0; index < this.rows; index++) {
+        prows.push([])
+        for (let i = 0; i < this.rowlen; i++) {
+          prows[index].push(this.posts[(index * this.rowlen) + i])
+        }
+      }
+      return prows
+    }
+  },
+  methods: {
+    follow () {
+        this.followers = this.followers + 1
+    }
+  }
+});
+
 const Post = Vue.component('post', {
   template: `
   <div class="center-form">
@@ -391,7 +520,7 @@ const router = new VueRouter({
       {path: "/login", component: Login},
       {path: "/logout", component: Logout},
       {path: "/explore", component: Explore},
-      {path: "/users/:user_id", component: User},
+      {path: "/users/:user_id", component: Profile},
       {path: "/posts/new", component: Post},
 
       // This is a catch all route in case none of the above matches
