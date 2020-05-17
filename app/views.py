@@ -100,12 +100,16 @@ def follow_user(user_id):
 
     # ensure the target user exists in the db and that the user isn't trying to follow his/herself
     if tar_user and target_id != user_id:
-        # check if already following here - to add
-
-        follow = Follow(user_id, target_id)
-        db.session.add(follow)
-        db.session.commit()
-        return jsonify({"message": "You are now following that user"})
+        
+        # check if user is already following target user
+        follow = Follow.query.filter_by(user_id=user_id, follower_id=target_id).first()
+        if follow == None:
+            follow = Follow(user_id, target_id)
+            db.session.add(follow)
+            db.session.commit()
+            return jsonify({"message": "You are now following that user"})
+        else:
+            return jsonify({'code': -1, "message": "You are already following that user", 'errors': []})
     else:
         return jsonify({'code': -1, 'message': 'Invalid request', 'errors': [] })
 
