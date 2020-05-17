@@ -10,7 +10,8 @@ import jwt
 import datetime
 from app import app, db
 from app.utils import *
-from app.models import User, Post, Like, Follow
+from app.forms import *
+from app.models import *
 from flask import jsonify, render_template, request, url_for, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -21,17 +22,55 @@ from werkzeug.utils import secure_filename
 
 @app.route('/api/users/register', methods=["POST"])
 def register():
-    pass
+    form = RegisterForm()
+    errors = []
+    if form.validate_on_submit() :
+        firstname=request.form['first_name']
+        lastname=request.form['last_name']
+        username=request.form['username']
+        user_n=User.query.filter_by(username=username).first()
+        if user_n is None:
+            password=request.form['password']
+            email=request.form['email']
+            user_e=User.query.filter_by(email=email).first()
+            if user_e is None:
+                location = request.form['location']
+                biography = request.form['bio']
+                f = request.files['profile_picture']
+                filename = secure_filename(f.filename)
+                f.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
+                new_user = User(first_name=firstname, last_name=lastname, username=username, password=password,
+                                email=email, location=location, biography=biography, profile_picture=filename)
+                db.session.add(new_user)
+                db.session.commit()
+                return jsonify({
+                    'message':'User successfully registered'
+                    })
+            else:
+                errors.append("Email already in use")
+        else:
+            errors.append('Username already in use')
+    return jsonify({
+        'message':'User not created',
+        'errors':form_errors(form) + errors
+        })
 
 @app.route('/api/auth/login', methods=["POST"])
 def login():
-    # jwt practice - rough idea. Need to accept login, generate token, rollout
-    auth = request.json
-
-    if auth and auth["password"] == 'password':
-        token = jwt.encode({'user': auth["username"], 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'])
-        return jsonify({'token': token.decode('UTF-8')})
-    return make_response('Could not verify!', 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
+    form = LoginForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        user = User.query.filter_by(username=username).first()
+        if user is not None and check_password_hash(user.password, password):
+            token = jwt.encode({'user_id': user.id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'])
+            return jsonify({'code': 1, 'token': token.decode('UTF-8')})
+        return make_response({
+            'code': -1,
+            'message': 'Incorrect Username or Password',
+            'errors': []}, 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
+    else:
+        return jsonify({'code': -1, 'message': 'Login Failed', 'errors': form_errors(form)})
 
 @app.route('/api/auth/logout', methods=["GET"])
 @auth_required
@@ -52,7 +91,38 @@ def get_post(user_id):
 @app.route('/api/users/<int:user_id>/follow', methods=["POST"])
 @auth_required
 def follow_user(user_id):
-    pass
+    data = request.json
+
+    target_id = data["follower_id"]
+    user_id = getUserID()
+
+    tar_user = User.query.get(target_id)
+
+    # ensure the target user exists in the db and that the user isn't trying to follow his/herself
+    if tar_user and target_id != user_id:
+        
+        # check if user is already following target user
+        follow = Follow.query.filter_by(user_id=user_id, follower_id=target_id).first()
+        if follow == None:
+            follow = Follow(user_id, target_id)
+            db.session.add(follow)
+            db.session.commit()
+            return jsonify({"message": "You are now following that user"})
+        else:
+            return jsonify({'code': -1, "message": "You are already following that user", 'errors': []})
+    else:
+        return jsonify({'code': -1, 'message': 'Invalid request', 'errors': [] })
+
+
+def getUserID():
+    """Returns the user ID of the currently logged in"""
+    auth = request.headers.get('Authorization', None)
+    token = auth.split()[1]
+    try:
+        payload = jwt.decode(token, app.config['SECRET_KEY'], verify=False)
+        return payload["user_id"]
+    except:
+        return -1
 
 @app.route('/api/posts', methods=["GET"])
 @auth_required
