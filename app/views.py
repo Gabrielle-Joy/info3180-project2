@@ -64,8 +64,13 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user is not None and check_password_hash(user.password, password):
             token = jwt.encode({'user_id': user.id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'])
-            return jsonify({'token': token.decode('UTF-8')})
-        return make_response('Could not verify!', 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
+            return jsonify({'code': 1, 'token': token.decode('UTF-8')})
+        return make_response({
+            'code': -1,
+            'message': 'Incorrect Username or Password',
+            'errors': []}, 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
+    else:
+        return jsonify({'code': -1, 'message': 'Login Failed', 'errors': form_errors(form)})
 
 @app.route('/api/auth/logout', methods=["GET"])
 @auth_required
@@ -87,12 +92,17 @@ def get_post(user_id):
 @auth_required
 def follow_user(user_id):
     data = request.json
-    target_id = data['follower_id']
-    tar_user = User.query.get(target_id)
 
-    # ensure the target user exists in the db, and the requesting user
-    # is verified by the token
-    if validateUser(user_id) and user_id == data['user_id']:
+    target_id = user_id
+    user_id = getUserID()
+
+    tar_user = User.query.get(target_id)
+    print(tar_user)
+
+    # ensure the target user exists in the db and that the user isn't trying to follow his/herself
+    if tar_user and target_id != user_id:
+        # check if already following here - to add
+
         follow = Follow(user_id, target_id)
         db.session.add(follow)
         db.session.commit()
@@ -101,22 +111,15 @@ def follow_user(user_id):
         return jsonify({'code': -1, 'message': 'Invalid request', 'errors': [] })
 
 
-
-
-
-def validateUser(user_id):
-    """Ensures the user_id passed matches the user_id in token. Returns
-    true if it matches, false otherwise"""
+def getUserID():
+    """Returns the user ID of the currently logged in"""
     auth = request.headers.get('Authorization', None)
-    token = auth.split[1]
+    token = auth.split()[1]
     try:
         payload = jwt.decode(token, app.config['SECRET_KEY'], verify=False)
-        if payload["user_id"] == user_id:
-            return True
-        else:
-            return False
+        return payload["user_id"]
     except:
-        return False
+        return -1
 
 @app.route('/api/posts', methods=["GET"])
 @auth_required
