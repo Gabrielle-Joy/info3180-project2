@@ -1,36 +1,54 @@
+Vue.prototype.$errors = []
+Vue.prototype.$messages = []
+Vue.mixin({
+    data () {
+        return {
+            errorList: ['EROORRRRS!!'],
+            messageList: []
+        }   
+    },
+    computed: {
+        errors () {
+            return this.errorList
+        },
+        messages () {
+            return this.messageList
+        }
+    }
+})
 /* Add your Application JavaScript */
 Vue.component('app-header', {
-  template: `
-      <header>
-          <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-            <a class="navbar-brand" href="/">
-              <img src="../static/images/interface.png" class="nav-logo d-inline-block align-top" width="30" height="30" alt="mkk"/>
-              Photogram
-            </a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-              <span class="navbar-toggler-icon"></span>
-            </button>
+    template: `
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+              <a class="navbar-brand" href="/">
+                <img src="../static/images/interface.png" width="30" height="30" class="d-inline-block align-top" alt="mkk"/>
+                Photogram
+              </a>
+              <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+              </button>
 
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-              <ul class="navbar-nav ml-auto">
-                <li class="nav-item active">
-                  <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="/explore">Explore</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="/users/:user_id">My Profile</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="/logout">Logout</a>
-                </li>
-              </ul>
-              </ul>
-            </div>
-          </nav>
-      </header>    
-  `,
+              <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ml-auto">
+                  <li class="nav-item active">
+                    <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/explore">Explore</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/users/:user_id">My Profile</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/logout">Logout</a>
+                  </li>
+                </ul>
+                </ul>
+              </div>
+            </nav>
+        </header>    
+    `,
     data: function() {
       return {};
     }
@@ -49,6 +67,31 @@ Vue.component('app-footer', {
             year: (new Date).getFullYear()
         }
     }
+});
+
+/* Feedback container - container for displaying error/success messages*/
+const Feedback = Vue.component('feedback', {
+    template: `
+    <div>
+        <div 
+            class="bg-light border border-danger rounded text-danger p-2" 
+            v-if="errors.length > 0 && messages.length == 0"
+        >
+        <ul class="">
+            <li v-for="(error, index) in errors" :key="index">{{ error }}</li>
+        </ul>
+        </div>
+
+        <div 
+            class="border border-success rounded text-success p-2" 
+            v-if="messages.length > 0 && errors.length == 0"
+        >
+        <ul>
+            <li v-for="(message, index) in messages" :key="index">{{ message }}</li>
+        </ul>
+        </div>
+    </div>
+    `
 })
 
 /* Router Components */
@@ -59,18 +102,104 @@ const Home = Vue.component('home', {
   </div>
   `,
   data: function () {
-      return {}
+      return {};
   }
 });
 
 const Register = Vue.component('register', {
   template: `
-  <div>
-      <h1>Register</h1>
+  <div id="register">
+    <slot 
+    <div class="page-header text-shadow">
+      <h3>Register</h3>
+    </div>
+
+    <div class="border border-info p-3 bg-light rounded shadow">
+      <form @submit.prevent="register_user()" id="register-form">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" class="form-control" name="username" id="username">
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" class="form-control" name="password" id="password">
+        </div>
+        <div class="form-group">
+          <label for="fname">Firstname</label>
+          <input type="text" class="form-control" name="first_name" id="fname">
+        </div>
+        <div class="form-group">
+          <label for="lname">Lastname</label>
+          <input type="text" class="form-control" name="last_name" id="lname">
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" class="form-control" name="email" id="email">
+        </div>
+        <div class="form-group">
+          <label for="location">Location</label>
+          <input type="text" class="form-control" name="location" id="location">
+        </div>
+        <div class="form-group">
+          <label for="bio">Biography</label>
+          <textarea     
+            name="bio" id="bio" 
+            cols="30" rows="10" 
+            class="form-control" 
+            placeholder="Enter a short piece about yourself"
+          ></textarea>
+        </div>
+        <div class="form-group">
+          <label for="profile_photo">Photo</label>
+          <input type="file" class="form-control-file" name="profile_photo" id="profile_photo">
+        </div>
+        <div class="mt-2">
+          <hr>
+          <button type="submit" class="btn btn-info btn-lg">Register!</button>
+        </div>
+        
+      </form>
+    </div>
   </div>
   `,
   data: function () {
       return {}
+  },
+  methods: {
+    register_user () {
+        el = document.getElementById('register-form')
+        form = new FormData(el)
+        // this.errorList = ["KILL"]
+        // console.log(this.errors)
+        // this.messages = ["SUCCESSSSS!!"]
+        // console.log(messages)
+
+        // send api request
+        fetch('api/register', {
+            method: "POST",
+            body: form,
+            headers: {
+                'X-CSRFToken': token
+            },
+            credentials: 'same-origin'
+        })
+        .then(res => {
+            return res.json()
+        })
+        .then(res => {
+            console.log(res)
+            if(res.status == 201) {
+                // successful register
+                // messages = [res.message]
+                // messages = ["SUCCESSSSS!!"]
+                router.push({name: 'login'})
+            } else {
+                // failed register
+                // errors = ["ERROR!!"]
+                // errors = [res.errors]
+            }
+        })
+    }
   }
 });
 

@@ -21,8 +21,10 @@
         <main>
             <div class="container">
                 <!-- component matched by the route will render here -->
-                <router-view></router-view>
-                </div>
+                <feedback></feedback>
+                <router-view>
+                  
+                </router-view>
             </div>
         </main>
         <app-footer></app-footer>
@@ -33,6 +35,8 @@
     <script src="/static/js/bootstrap.min.js"></script>
     <script src="/static/js/vue.js"></script>
     <script src="/static/js/vue-router.js"></script>
+
+    <script>const token = "{{ csrf_token() }}";</script>
     <script src="/static/js/app.js"></script>
   </body>
 </html>

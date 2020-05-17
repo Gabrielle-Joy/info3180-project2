@@ -1,7 +1,24 @@
 body {
     padding-top: 5rem;
+    background-color: rgba(238, 238, 255, 1);
 }
 
 footer  {
-    padding-top: 20px;
+    margin-top: 20px;
+    /* padding-top: 20px; */
+}
+
+.shadow {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 200, 0.2), 0 6px 20px 0 rgba(0, 0, 200, 0.19);
+}
+
+.text-shadow {
+    text-shadow: 1px 1px 2px #000040;;
+}
+
+#register {
+    padding-top: 5rem;
+    padding-left: 10rem;
+    padding-right: 10rem;
+    padding-bottom: 5rem;
 }
