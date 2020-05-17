@@ -93,11 +93,10 @@ def get_post(user_id):
 def follow_user(user_id):
     data = request.json
 
-    target_id = user_id
+    target_id = data["follower_id"]
     user_id = getUserID()
 
     tar_user = User.query.get(target_id)
-    print(tar_user)
 
     # ensure the target user exists in the db and that the user isn't trying to follow his/herself
     if tar_user and target_id != user_id:
