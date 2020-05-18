@@ -33,19 +33,17 @@ class User(db.Model):
     password = db.Column(db.String(200), nullable=False)
     first_name = db.Column(db.String(30), nullable=False)
     last_name = db.Column(db.String(30), nullable=False)
-    gender = db.Column(db.String(6), nullable=False)
     email = db.Column(db.String(40), unique=True, nullable=False)
     location = db.Column(db.String(40))
     biography = db.Column(db.String(250))
     profile_picture = db.Column(db.String(120), nullable=False) # stores the name of the image file to be rendered
     date_created = db.Column(db.Date())
 
-    def __init__(self, username, password, first_name, last_name, gender, email, location, biography, profile_picture):
+    def __init__(self, username, password, first_name, last_name, email, location, biography, profile_picture):
         self.username = username
         self.password = generate_password_hash(password, method='pbkdf2:sha256')
         self.first_name = first_name
         self.last_name = last_name
-        self.gender = gender
         self.email = email
         self.location = location
         self.biography = biography
@@ -91,9 +89,9 @@ class Follow(db.Model):
     user_id = db.Column(db.Integer, nullable=False)
     follower_id = db.Column(db.Integer, nullable=False)
 
-    def __init__(self, user_id, post_id):
+    def __init__(self, user_id, follower_id):
         self.user_id = user_id
-        self.follower_id = post_id
+        self.follower_id = follower_id
 
     def __repr__(self):
         return '<ID {0}\nUserID {1}\nFollowerID {2}>'.format(self.id, self.user_id, self.follower_id)

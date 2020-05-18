@@ -17,5 +17,5 @@ env/
 .vscode
 
 # ignore image files uploaded by photogram user
-uploads/*.png
-uploads/*.jpg
+**/uploads/*.png
+**/uploads/*.jpg
