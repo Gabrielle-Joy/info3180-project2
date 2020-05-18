@@ -78,8 +78,30 @@ def logout():
     """As JWT being used to authenticate, true 'logout' occurs when the token expires.
     The client however, should dump the token on logout. Future designs of this project
     could have a blacklist of tokens that once logged out, the system should reject"""
-    return jsonify({'code': 1, 'message':'User successfully logged out'})
+    return jsonify({'message':'User successfully logged out'})
 
+@app.route('/api/users/<int:user_id>', methods=["GET"])
+@auth_required
+def get_user_details(user_id):
+    user = User.query.filter_by(id=user_id).first()
+
+    # confirm user exists
+    if user:
+        data = {
+            'id':user.id, 
+            'username': user.username,
+            'firstname': user.first_name,
+            'lastname': user.last_name,
+            'email': user.email,
+            'location': user.location,
+            'biography': user.biography,
+            'profile_photo': user.profile_picture,
+            'joined_on': user.date_created
+        }
+        return jsonify(data)
+        
+    else:
+        return jsonify({'code': -1, 'message': 'User does not exist', 'errors': [] })
 
 @app.route('/api/users/<int:user_id>/posts', methods=["POST"])
 @auth_required
