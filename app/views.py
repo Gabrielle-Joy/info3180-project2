@@ -107,7 +107,33 @@ def get_user_details(user_id):
 @app.route('/api/users/<int:user_id>/posts', methods=["POST"])
 @auth_required
 def add_post(user_id):
-    pass
+    form = PostForm()
+    errors = []
+
+    # gets the user id from the token
+    user_id = getUserID()
+    user = User.query.filter_by(id=user_id).first()
+
+    if form.validate_on_submit():
+        bio = request.form['bio']
+        pic = request.files['post_photo']
+
+        # save the uploaded image
+        filename = secure_filename(pic.filename)
+        pic.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
+
+        post = Post(user_id, filename, bio)
+        db.session.add(post)
+        db.session.commit()
+        
+        return jsonify({'message':'Successfully created a new post'})
+    else:
+        return jsonify({'code': -1, 'message': 'Post not created', 'errors': form_errors(form)})
+
+    
+
+        
+
 
 @app.route('/api/users/<int:user_id>/posts', methods=["GET"])
 @auth_required
@@ -163,7 +189,7 @@ def follow_user(user_id):
 
 
 def getUserID():
-    """Returns the user ID of the currently logged in"""
+    """Returns the user ID in the JWT token payload"""
     auth = request.headers.get('Authorization', None)
     token = auth.split()[1]
     try:
@@ -209,6 +235,8 @@ def all_posts():
 @auth_required
 def like_post(post_id):
     pass
+
+
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
