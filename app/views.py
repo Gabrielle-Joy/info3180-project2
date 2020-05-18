@@ -64,7 +64,7 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user is not None and check_password_hash(user.password, password):
             token = jwt.encode({'user_id': user.id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'])
-            return jsonify({'code': 1, 'token': token.decode('UTF-8')})
+            return jsonify({'user_id': user.id, 'token': token.decode('UTF-8')})
         return make_response({
             'code': -1,
             'message': 'Incorrect Username or Password',
@@ -75,7 +75,10 @@ def login():
 @app.route('/api/auth/logout', methods=["GET"])
 @auth_required
 def logout():
-    pass
+    """As JWT being used to authenticate, true 'logout' occurs when the token expires.
+    The client however, should dump the token on logout. Future designs of this project
+    could have a blacklist of tokens that once logged out, the system should reject"""
+    return jsonify({'code': 1, 'message':'User successfully logged out'})
 
 
 @app.route('/api/users/<int:user_id>/posts', methods=["POST"])
@@ -93,7 +96,8 @@ def get_post(user_id):
 def follow_user(user_id):
     data = request.json
 
-    target_id = data["follower_id"]
+    # the person to be followed. Obtaining info from the POST body rather than the route params
+    target_id = data["follower_id"] 
     user_id = getUserID()
 
     tar_user = User.query.get(target_id)
@@ -123,6 +127,19 @@ def getUserID():
         return payload["user_id"]
     except:
         return -1
+
+@app.route('/api/users/<int:user_id>/follow', methods=["GET"])
+@auth_required
+def get_num_followers(user_id):
+    user = User.query.get(user_id)
+
+    #check if user exists
+    if user:
+        num_followers = Follow.query.filter_by(follower_id=user_id).count()
+        return jsonify({'followers': num_followers})
+    else:
+        return jsonify({'code': -1, 'message': 'User does not exist', 'errors': [] })
+
 
 @app.route('/api/posts', methods=["GET"])
 @auth_required
