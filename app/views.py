@@ -130,11 +130,6 @@ def add_post(user_id):
     else:
         return jsonify({'code': -1, 'message': 'Post not created', 'errors': form_errors(form)})
 
-    
-
-        
-
-
 @app.route('/api/users/<int:user_id>/posts', methods=["GET"])
 @auth_required
 def get_post(user_id):
@@ -145,7 +140,6 @@ def get_post(user_id):
         return jsonify({'posts': get_post_helper(user_id)})
     else:
         return jsonify({'code': -1, 'message': 'User does not exist', 'errors': [] })
-
 
 def get_post_helper(user_id):
     """Returns a list of dicts of post info for given user_id"""
@@ -185,8 +179,7 @@ def follow_user(user_id):
         else:
             return jsonify({'code': -1, "message": "You are already following that user", 'errors': []})
     else:
-        return jsonify({'code': -1, 'message': 'Invalid request', 'errors': [] })
-
+        return jsonify({'code': -1, 'message': 'Target user does not exit/User cannot follow oneself', 'errors': [] })
 
 def getUserID():
     """Returns the user ID in the JWT token payload"""
@@ -210,7 +203,6 @@ def get_num_followers(user_id):
     else:
         return jsonify({'code': -1, 'message': 'User does not exist', 'errors': [] })
 
-
 @app.route('/api/posts', methods=["GET"])
 @auth_required
 def all_posts():
@@ -230,11 +222,33 @@ def all_posts():
 
     return {'posts': data}
 
-
 @app.route('/api/posts/<int:post_id>/like', methods=["POST"])
 @auth_required
 def like_post(post_id):
-    pass
+    data = request.json
+
+    # obtaining the post_id from the POST boy rather than URL params
+    post_id = data['post_id']
+    user_id = getUserID()
+
+    post = Post.query.get(post_id)
+
+    # ensure the target post exists
+    if post:
+        # check if the user has already liked the post
+        
+        like = Like.query.filter_by(user_id=user_id, post_id=post_id).first()
+        if like == None:
+            print(post)
+            like = Like(user_id, post_id)
+            db.session.add(like)
+            db.session.commit()
+            likes = Like.query.filter_by(post_id=post_id).count()
+            return jsonify({"message": "Post liked!", "likes": likes})
+        else:
+            return jsonify({'code': -1, "message": "You already liked this post", 'errors': []})
+    else:
+        return jsonify({'code': -1, "message": "Post does not exist", 'errors': []})
 
 
 
