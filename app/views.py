@@ -96,7 +96,8 @@ def get_user_details(user_id):
             'location': user.location,
             'biography': user.biography,
             'profile_photo': user.profile_picture,
-            'joined_on': user.date_created
+            'joined_on': user.date_created,
+            'posts': get_post_helper(user_id)
         }
         return jsonify(data)
         
@@ -111,7 +112,28 @@ def add_post(user_id):
 @app.route('/api/users/<int:user_id>/posts', methods=["GET"])
 @auth_required
 def get_post(user_id):
-    pass
+    user = User.query.filter_by(id=user_id).first()
+
+    # Confirm user exists
+    if user:
+        return jsonify({'posts': get_post_helper(user_id)})
+    else:
+        return jsonify({'code': -1, 'message': 'User does not exist', 'errors': [] })
+
+
+def get_post_helper(user_id):
+    """Returns a list of dicts of post info for given user_id"""
+    lst = []
+    posts = Post.query.filter_by(user_id=user_id).all()
+    for post in posts:
+        lst.append({
+            "id": post.id,
+            "user_id": post.user_id,
+            "photo": post.photo,
+            "description": post.caption,
+            "created_on": post.created_on
+        })
+    return lst
 
 @app.route('/api/users/<int:user_id>/follow', methods=["POST"])
 @auth_required
