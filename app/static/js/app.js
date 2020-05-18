@@ -1,21 +1,3 @@
-Vue.prototype.$errors = []
-Vue.prototype.$messages = []
-Vue.mixin({
-    data () {
-        return {
-            errorList: ['EROORRRRS!!'],
-            messageList: []
-        }   
-    },
-    computed: {
-        errors () {
-            return this.errorList
-        },
-        messages () {
-            return this.messageList
-        }
-    }
-})
 /* Add your Application JavaScript */
 Vue.component('app-header', {
     template: `
@@ -73,12 +55,13 @@ Vue.component('app-footer', {
 const Feedback = Vue.component('feedback', {
     template: `
     <div>
+        {{errors}}
         <div 
             class="bg-light border border-danger rounded text-danger p-2" 
             v-if="errors.length > 0 && messages.length == 0"
         >
         <ul class="">
-            <li v-for="(error, index) in errors" :key="index">{{ error }}</li>
+            <li v-for="(error, index) in errors " :key="index">{{ error }}</li>
         </ul>
         </div>
 
@@ -91,7 +74,13 @@ const Feedback = Vue.component('feedback', {
         </ul>
         </div>
     </div>
-    `
+    `,
+    data () {
+      return {
+        errors: [],
+        messages: []
+      }
+    }
 })
 
 /* Router Components */
@@ -109,7 +98,7 @@ const Home = Vue.component('home', {
 const Register = Vue.component('register', {
   template: `
   <div class="center-form">
-    <div class="page-header text-shadow">
+    <div class="page-header">
       <h3>Register</h3>
     </div>
 
@@ -168,10 +157,6 @@ const Register = Vue.component('register', {
     register_user () {
         el = document.getElementById('register-form')
         form = new FormData(el)
-        // this.errorList = ["KILL"]
-        // console.log(this.errors)
-        // this.messages = ["SUCCESSSSS!!"]
-        // console.log(messages)
 
         // send api request
         fetch('api/users/register', {
@@ -183,7 +168,10 @@ const Register = Vue.component('register', {
             credentials: 'same-origin'
         })
         .then(res => {
+          if (res.status == 201) {
             return res.json()
+          }
+            
         })
         .then(res => {
             console.log(res)
@@ -191,9 +179,11 @@ const Register = Vue.component('register', {
                 // successful register
                 // messages = [res.message]
                 // messages = ["SUCCESSSSS!!"]
+                console.log(res.data.message)
                 router.push({name: 'login'})
             } else {
                 // failed register
+                console.log(res.data.errors)
                 // errors = ["ERROR!!"]
                 // errors = [res.errors]
             }
@@ -235,16 +225,14 @@ const Login = Vue.component('login', {
     login_user () {
       el = document.getElementById('login-form')
       form = new FormData(el)
-      // this.errorList = ["KILL"]
-      // console.log(this.errors)
-      // this.messages = ["SUCCESSSSS!!"]
-      // console.log(messages)
+      console.log(JSON.stringify(form))
 
       // send api request
       fetch('api/users/login', {
           method: "POST",
-          body: form,
+          body: JSON.stringify(form),
           headers: {
+              'content-type': 'application/json',
               'X-CSRFToken': token
           },
           credentials: 'same-origin'
@@ -254,16 +242,10 @@ const Login = Vue.component('login', {
       })
       .then(res => {
           console.log(res)
-          if(res.status == 201) {
-              // successful register
-              // messages = [res.message]
-              // messages = ["SUCCESSSSS!!"]
-              router.push({name: 'home'})
-          } else {
-              // failed register
-              // errors = ["ERROR!!"]
-              // errors = [res.errors]
-          }
+          // successful register
+          console.log("Success")
+          localStorage.setItem('token', res.token);
+          router.push({name: 'home'})
       })
     }
   }
@@ -515,13 +497,13 @@ const NotFound = Vue.component('not-found', {
 const router = new VueRouter({
   mode: 'history',
   routes: [
-      {path: "/", component: Home},
-      {path: "/register", component: Register},
-      {path: "/login", component: Login},
-      {path: "/logout", component: Logout},
-      {path: "/explore", component: Explore},
-      {path: "/users/:user_id", component: Profile},
-      {path: "/posts/new", component: Post},
+      {name: 'home', path: "/", component: Home},
+      {name: 'register', path: "/register", component: Register},
+      {name: 'login', path: "/login", component: Login},
+      {name: 'logout', path: "/logout", component: Logout},
+      {name: 'explore', path: "/explore", component: Explore},
+      {name: 'profile', path: "/users/:user_id", component: Profile},
+      {name: 'post', path: "/posts/new", component: Post},
 
       // This is a catch all route in case none of the above matches
       {path: "*", component: NotFound}
