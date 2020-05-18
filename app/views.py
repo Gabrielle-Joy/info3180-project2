@@ -188,7 +188,21 @@ def get_num_followers(user_id):
 @app.route('/api/posts', methods=["GET"])
 @auth_required
 def all_posts():
-    return {'message': 'not too bad champ'}
+    data = []
+    posts = Post.query.all()
+
+    for post in posts:
+        likes = Like.query.filter_by(post_id=post.id).count()
+        data.append({
+            "id": post.id,
+            "user_id": post.user_id,
+            "photo": post.photo,
+            "caption": post.caption,
+            "created_on": post.created_on,
+            "likes": likes
+        })
+
+    return {'posts': data}
 
 
 @app.route('/api/posts/<int:post_id>/like', methods=["POST"])
