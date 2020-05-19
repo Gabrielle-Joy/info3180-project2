@@ -2,7 +2,6 @@ from . import db
 from datetime import date
 from werkzeug.security import generate_password_hash
 
-
 class Post(db.Model):
     __tablename__ = 'posts'
 

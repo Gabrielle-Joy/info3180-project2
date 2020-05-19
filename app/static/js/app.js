@@ -1,10 +1,8 @@
-Vue.prototype.$baseurl = 'http://localhost:8080'
 Vue.prototype.$uploads = '/static/uploads/'
 /* Add your Application JavaScript */
 Vue.component('app-header', {
     template: `
         <header>
-        {{uid}}
             <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
               <a class="navbar-brand" href="/">
                 <img src="../static/images/interface.png" width="30" height="30" class="d-inline-block align-top" alt="mkk"/>
@@ -171,7 +169,7 @@ const Register = Vue.component('register', {
         // console.log(JSON.stringify(form))
 
         // send api request
-        fetch('api/users/register', {
+        fetch('/api/users/register', {
             method: "POST",
             body: form,
             headers: {
@@ -263,6 +261,7 @@ const Login = Vue.component('login', {
     }
   }
 });
+
 const Logout = Vue.component('logout', {
   template: `
   <div>
@@ -377,8 +376,9 @@ const Profile = Vue.component('profile', {
     <div
       v-for="(row, index) in photorows"
       :key="index"
+      class=""
     >
-      <div class="card-deck">
+      <div class="card-group">
         <div v-for="(post, pindex) in row" :key="pindex">
           <div 
             class="card"
@@ -386,10 +386,11 @@ const Profile = Vue.component('profile', {
             @click="viewPost(post)"
           >
             <img 
-              class="profile-post"
+              class="card-img-top"
               :src="$uploads + post.photo" 
               :alt="post.photo"
             >
+            <div class="card-body"></div>
           </div>
 
           <div 
@@ -473,7 +474,7 @@ const Profile = Vue.component('profile', {
     // fetch profile          
     const uid = this.$route.params.user_id
     console.log(`/api/users/${uid}`)   
-    fetch(`${this.$baseurl}/api/users/${uid}`, {
+    fetch(`/api/users/${uid}`, {
         method: "GET",
         headers: {
             'X-CSRFToken': token,
@@ -569,7 +570,11 @@ const Post = Vue.component('post', {
     template: `
     <div class="center-form">
         <div class="card" v-if="post">
-            <img :src="$uploads + post.photo" alt="post photo" class="card-img-top">
+            <img 
+              :src="$uploads + post.photo" 
+              alt="post photo" 
+              class="card-img-top profile-post"
+            >
             <div class="card-body">
                 <div class="mt-3 mb-2">
                     <i @click="like()" class="far fa-heart" v-if="!liked"></i>
