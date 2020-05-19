@@ -36,3 +36,13 @@ footer  {
 .clickable {
     cursor: pointer;
 }
+
+.profile-photo {
+    /* height: 20vw; */
+    height: 25vw;
+}
+
+.bio-box {
+    height: 25vw;
+    overflow: hidden;
+}

@@ -257,7 +257,7 @@ const Login = Vue.component('login', {
       .then(res => {
         console.log(res)
 
-        if (!res.errors && !res.code) {
+        if (responseStatus(res)) {
             // successful login
             localStorage.setItem('jwt_token', res.token);
             localStorage.setItem('id', res.user_id);
@@ -331,11 +331,9 @@ const Profile = Vue.component('profile', {
   <div>
     <div class="card shadow mb-5">
     
-      <div class="card-top rounded border-primary"></div>
-
       <div class="row no-gutters p-4" style="width: auto;">
 
-        <div class="col-md-3">  
+        <div class="col-md-4 bio-box">  
           <img 
             :src="$uploads + profile.profile_photo" 
             class="card-img" 
@@ -343,23 +341,23 @@ const Profile = Vue.component('profile', {
           >
         </div>
 
-        <div class="col-md-9 d-flex">
+        <div class="col-md-8 d-flex pt-5">
           <div class="card-body w-50">
             <h3 class="card-title text-dark font-weight-bold ">{{ fullname }}</h3>
             <div class="text-secondary">
 
               <div class="d-flex align-items-center mb-2">
-                <i class="fas fa-map-marker-alt"></i>
-                <p class="card-text ml-3">{{ profile.email }}</p>
+                <i class="fa-fw fas fa-map-marker-alt"></i>
+                <p class="card-text ml-3">{{ profile.location }}</p>
               </div>
               
               <div class="d-flex align-items-center mb-2">
-                <i class="far fa-envelope card-text"></i>
-                <p class="card-text ml-3">{{ profile.location }}</p>
+                <i class="fa-fw far fa-envelope card-text"></i>
+                <p class="card-text ml-3">{{ profile.email }}</p>
               </div>
 
               <div class="d-flex align-items-center">
-                <i class="far fa-calendar"></i>
+                <i class="fa-fw far fa-calendar"></i>
                 <p class="card-text ml-3">joined on {{ profile.joined_on }}</p> 
               </div>
 
@@ -382,7 +380,7 @@ const Profile = Vue.component('profile', {
               </div>
             </div>  
 
-            <div>
+            <div v-if="!selfFollow">
               <button @click="follow()" class="btn btn-success btn-block" v-if="following">Following</button>
               <button @click="follow()" class="btn btn-primary btn-block" v-else>Follow</button>
             </div>
@@ -431,6 +429,9 @@ const Profile = Vue.component('profile', {
   computed: {
     fullname () {
       return this.profile ? this.profile.firstname + ' ' + this.profile.lastname : ''
+    },
+    selfFollow () {
+      return this.$root.uid == this.$route.params.user_id
     },
     rows () {
         if (this.profile.posts) {
@@ -597,10 +598,13 @@ const NewPost = Vue.component('new-post', {
             })
             .then(data => {
                 console.log(data)
-                if (!data.errors) {
+                if (responseStatus(res)) {
                     // success
+                    this.$root.saveFeedback(message=res.message)
                     console.log(data.message) // FEEDBACK
+                    router.push({name: 'explore'})
                 } else {
+                    this.$root.saveFeedback(message=res.message, error=res.error, code=res.code)
                     console.error(data.errors)
                 }
                 
@@ -661,7 +665,7 @@ const Post = Vue.component('post', {
             })
             .then(res => res.json())
             .then(data => {
-                if (!data.errors) {
+                if (responseStatus(data)) {
                     // success
                     console.log(data.message)
                     this.likes = data.likes
