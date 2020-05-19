@@ -178,6 +178,7 @@ def follow_user(user_id):
             db.session.commit()
             return jsonify({"message": "You are now following that user"})
         else:
+            # unfollow
             return jsonify({'code': -1, "message": "You are already following that user", 'errors': []})
     else:
         return jsonify({'code': -1, 'message': 'Target user does not exit/User cannot follow oneself', 'errors': [] })
