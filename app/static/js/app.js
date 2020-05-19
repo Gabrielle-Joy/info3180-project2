@@ -1,3 +1,8 @@
+/* util functions */
+const responseStatus = function(res) {
+  return !res.errors && !res.code ? true : false
+}
+
 Vue.prototype.$uploads = '/static/uploads/'
 /* Add your Application JavaScript */
 Vue.component('app-header', {
@@ -73,7 +78,7 @@ const Feedback = Vue.component('feedback', {
               v-if="$root.code || $root.errors"
           >
             <p>{{ $root.message }}</p>
-            <ul class="">
+            <ul class="" v-if="$root.errors">
                 <li v-for="(error, index) in $root.errors " :key="index">{{ error }}</li>
             </ul>
           </div>
@@ -83,7 +88,7 @@ const Feedback = Vue.component('feedback', {
               v-else
           >
             <p>{{ $root.message }}</p>
-            <ul class="">
+            <ul class="" v-if="$root.errors">
                 <li v-for="(error, index) in $root.errors " :key="index">{{ error }}</li>
             </ul>
           </div>
@@ -289,7 +294,7 @@ const Logout = Vue.component('logout', {
     .then(res => res.json())
     .then(data => {
         console.log(data)
-        if (!data.errors) {
+        if (responseStatus(data)) {
             // successful logout
             console.log(data.message) // FEEEEDBAAAACK
             localStorage.removeItem('id')
@@ -340,7 +345,7 @@ const Profile = Vue.component('profile', {
 
         <div class="col-md-9 d-flex">
           <div class="card-body w-50">
-            <h3 class="card-title text-dark font-weight-bold ">{{ profile.fullname }}</h3>
+            <h3 class="card-title text-dark font-weight-bold ">{{ fullname }}</h3>
             <div class="text-secondary">
 
               <div class="d-flex align-items-center mb-2">
@@ -389,12 +394,12 @@ const Profile = Vue.component('profile', {
     <div
       v-for="(row, index) in photorows"
       :key="index"
-      class=""
+      class="mb-4"
     >
       <div class="card-deck">
         <div v-for="(post, pindex) in row" :key="pindex">
           <div 
-            class="card"
+            class="card clickable"
             v-if="post"
             @click="viewPost(post)"
           >
@@ -423,6 +428,9 @@ const Profile = Vue.component('profile', {
       }
   },
   computed: {
+    fullname () {
+      return this.profile ? this.profile.firstname + ' ' + this.profile.lastname : ''
+    },
     rows () {
         if (this.profile.posts) {
             return Math.floor((this.profile.posts.length - 1) / this.rowlen) + 1
@@ -453,22 +461,27 @@ const Profile = Vue.component('profile', {
   methods: {
     follow () {
       const uid = this.$route.params.user_id
+      const body = JSON.stringify({user_id: parseInt(this.$root.uid), follower_id: parseInt(uid)})
+      console.log(body)
         fetch(`/api/users/${uid}/follow`, {
-          method: "GET",  
+          method: "POST", 
+          body: body,
           headers: {
+              'Content-Type' : 'application/json',
               'X-CSRFToken': token,
               'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
           },
           credentials: 'same-origin'
         })
-        .then(res => res.json)
+        .then(res => res.json())
         .then(data => {
           console.log(data)
-          if (requestStatus(data)) {
+          if (responseStatus(data)) {
             // success
             this.$root.saveFeedback(message=data.message)
           } else {
-            this.$root.saveFeedback(erros=data.errors, code=data.code)
+            console.log("ERROR")
+            this.$root.saveFeedback(message=data.message, erros=data.errors, code=data.code)
           }
         })
         if (this.followers !== null) {
@@ -608,8 +621,8 @@ const Post = Vue.component('post', {
             >
             <div class="card-body">
                 <div class="mt-3 mb-2">
-                    <i @click="like()" class="far fa-heart" v-if="!liked"></i>
-                    <i @click="like()" class="fas fa-heart" v-else></i>
+                    <i @click="like()" class="far fa-heart clickable" v-if="!liked"></i>
+                    <i @click="like()" class="fas fa-heart clickable" v-else></i>
                     {{ likes }}
                 </div>
                 <p>{{ post.description }}</p>

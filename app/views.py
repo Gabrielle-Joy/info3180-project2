@@ -160,6 +160,7 @@ def get_post_helper(user_id):
 @auth_required
 def follow_user(user_id):
     data = request.json
+    print(data)
 
     # the person to be followed. Obtaining info from the POST body rather than the route params
     target_id = data["follower_id"] 
