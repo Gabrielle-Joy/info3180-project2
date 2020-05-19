@@ -1,3 +1,4 @@
+Vue.prototype.$baseurl = 'localhost:8080'
 /* Add your Application JavaScript */
 Vue.component('app-header', {
     template: `
@@ -20,7 +21,7 @@ Vue.component('app-header', {
                     <a class="nav-link" href="/explore">Explore</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link" href="/users/:user_id">My Profile</a>
+                    <a class="nav-link" href="/users/2">My Profile</a>
                   </li>
                   <li class="nav-item">
                     <a class="nav-link" href="/logout">Logout</a>
@@ -138,8 +139,8 @@ const Register = Vue.component('register', {
           ></textarea>
         </div>
         <div class="form-group">
-          <label for="profile_photo">Photo</label>
-          <input type="file" class="form-control-file" name="profile_photo" id="profile_photo">
+          <label for="profile_picture">Photo</label>
+          <input type="file" class="form-control-file" name="profile_picture" id="profile_picture">
         </div>
         <div class="mt-2">
           <hr>
@@ -155,8 +156,9 @@ const Register = Vue.component('register', {
   },
   methods: {
     register_user () {
-        el = document.getElementById('register-form')
+      el = document.getElementById('register-form')
         form = new FormData(el)
+        // console.log(JSON.stringify(form))
 
         // send api request
         fetch('api/users/register', {
@@ -168,24 +170,19 @@ const Register = Vue.component('register', {
             credentials: 'same-origin'
         })
         .then(res => {
-          if (res.status == 201) {
-            return res.json()
-          }
-            
+          console.log(res)
+          return res.json() 
         })
         .then(res => {
             console.log(res)
-            if(res.status == 201) {
-                // successful register
-                // messages = [res.message]
-                // messages = ["SUCCESSSSS!!"]
-                console.log(res.data.message)
-                router.push({name: 'login'})
+
+            if (!res.errors) {
+              // success
+              console.log(res.message)
+              router.push({name: 'login'})
             } else {
-                // failed register
-                console.log(res.data.errors)
-                // errors = ["ERROR!!"]
-                // errors = [res.errors]
+              // failed register
+              console.log(res.errors)
             }
         })
     }
@@ -225,27 +222,33 @@ const Login = Vue.component('login', {
     login_user () {
       el = document.getElementById('login-form')
       form = new FormData(el)
-      console.log(JSON.stringify(form))
 
       // send api request
-      fetch('api/users/login', {
+      fetch('api/auth/login', {
           method: "POST",
-          body: JSON.stringify(form),
+          body: form,
           headers: {
-              'content-type': 'application/json',
               'X-CSRFToken': token
           },
           credentials: 'same-origin'
       })
       .then(res => {
+          console.log(res)
           return res.json()
       })
       .then(res => {
-          console.log(res)
-          // successful register
-          console.log("Success")
-          localStorage.setItem('token', res.token);
-          router.push({name: 'home'})
+        console.log(res)
+        if (!res.errors) {
+            // successful login
+            console.log("Success")
+            localStorage.setItem('token', res.token);
+            localStorage.setItem('id', res.user_id);
+            router.push({name: 'home'})
+            console.log(localStorage.getItem('jwt_token'))
+        } else {
+            // failed login
+            console.log(res.errors)
+        }          
       })
     }
   }
@@ -272,17 +275,6 @@ const Explore = Vue.component('explore', {
   }
 });
 
-const User = Vue.component('user', {
-  template: `
-  <div>
-      <h1>User:I will find you</h1>
-  </div>
-  `,
-  data: function () {
-      return {}
-  }
-});
-
 const Profile = Vue.component('profile', {
   template: `
   <div>
@@ -302,22 +294,22 @@ const Profile = Vue.component('profile', {
 
         <div class="col-md-10 d-flex">
           <div class="card-body w-50">
-            <h3 class="card-title text-dark font-weight-bold ">{{ 'Terry' + " " + 'Crews' }}</h3>
+            <h3 class="card-title text-dark font-weight-bold ">{{ profile.fullname }}</h3>
             <div class="text-secondary">
 
               <div class="d-flex align-items-center mb-2">
                 <i class="fas fa-map-marker-alt"></i>
-                <p class="card-text ml-3">{{ 'tcrews@mail.com' }}</p>
+                <p class="card-text ml-3">{{ profile.email }}</p>
               </div>
               
               <div class="d-flex align-items-center mb-2">
                 <i class="far fa-envelope card-text"></i>
-                <p class="card-text ml-3">{{ 'Portmore' }}</p>
+                <p class="card-text ml-3">{{ profile.location }}</p>
               </div>
 
               <div class="d-flex align-items-center">
                 <i class="far fa-calendar"></i>
-                <p class="card-text ml-3">joined on {{ 'May 18, 2020' }}</p> 
+                <p class="card-text ml-3">joined on {{ profile.joined_on }}</p> 
               </div>
 
               <div class="d-flex align-items-center mt-3">
@@ -329,7 +321,7 @@ const Profile = Vue.component('profile', {
           <div class="card-body p-5">
             <div class="d-flex mb-5">
               <div class="w-50 text-center">
-                <p>{{ posts.length }}</p>
+                <p>{{ profile.posts.length }}</p>
                 <p class="text-muted">Posts</p>
               </div>
 
@@ -340,7 +332,7 @@ const Profile = Vue.component('profile', {
             </div>  
 
             <div>
-              <button @click="follow()" class="btn btn-primary btn-block">Follow</button>
+              <button class="btn btn-primary btn-block">Follow</button>
             </div>
           </div>
         </div>
@@ -378,6 +370,7 @@ const Profile = Vue.component('profile', {
       return {
         followers: 10,
         rowlen: 3,
+        profile: {},
         posts: [
           {
             photo: 'https://pbs.twimg.com/media/Dwv-JlDUUAA-8FK.jpg',
@@ -392,14 +385,18 @@ const Profile = Vue.component('profile', {
   },
   computed: {
     rows () {
-      return Math.floor((this.posts.length - 1) / this.rowlen) + 1
+        if (this.profile.posts) {
+            return Math.floor((this.profile.posts.length - 1) / this.rowlen) + 1
+        } else {
+            return 0
+        }
     },
     photorows () {
       const prows = []
       for (let index = 0; index < this.rows; index++) {
         prows.push([])
         for (let i = 0; i < this.rowlen; i++) {
-          prows[index].push(this.posts[(index * this.rowlen) + i])
+          prows[index].push(this.profile.posts[(index * this.rowlen) + i])
         }
       }
       return prows
@@ -408,7 +405,52 @@ const Profile = Vue.component('profile', {
   methods: {
     follow () {
         this.followers = this.followers + 1
+    },
+    getFollowerCount (uid) {
+        fetch(`${this.$baseurl}/api/users/${uid}/follow`, {
+            method: "GET",  
+            headers: {
+                'X-CSRFToken': token,
+            },
+            credentials: 'same-origin'
+        })
+        .then(res => {
+            return res.json()
+        })
+        .then(data => {
+            console.log(data)
+            if (data.followers) {
+                this.followers = data.followers
+            } else {
+                console.log("Error retrieving follower count")
+                this.followers = 0
+            }
+        })
     }
+  },
+  mounted () {
+      // fetch profile          
+
+    const uid = this.$route.params.user_id   
+    fetch(`api/users/${uid}`, {
+        method: "GET",
+        headers: {
+            'X-CSRFToken': token,
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+        },
+        credentials: 'same-origin'
+    })
+    .then(res => {
+        console.log(res)
+        return res.json()
+    })
+    .then(data => {
+        this.profile = data
+        console.log(this.profile)
+    })
+
+    this.getFollowerCount(uid)
+
   }
 });
 

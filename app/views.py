@@ -58,6 +58,7 @@ def register():
 @app.route('/api/auth/login', methods=["POST"])
 def login():
     form = LoginForm()
+    print(form.username.data)
     if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
