@@ -4,6 +4,7 @@ Vue.prototype.$uploads = '/static/uploads/'
 Vue.component('app-header', {
     template: `
         <header>
+        {{uid}}
             <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
               <a class="navbar-brand" href="/">
                 <img src="../static/images/interface.png" width="30" height="30" class="d-inline-block align-top" alt="mkk"/>
@@ -18,14 +19,14 @@ Vue.component('app-header', {
                   <li class="nav-item active">
                     <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
                   </li>
-                  <li class="nav-item">
+                  <li class="nav-item" v-if="uid">
                     <a class="nav-link" href="/explore">Explore</a>
                   </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="/users/2">My Profile</a>
+                  <li class="nav-item" v-if="uid">
+                    <a class="nav-link" :href="'/users/' + uid">My Profile</a>
                   </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="/logout">Logout</a>
+                  <li class="nav-item" v-if="uid"  >
+                    <a class="nav-link" href="/logout" @click="uid=null">Logout</a>
                   </li>
                 </ul>
                 </ul>
@@ -34,7 +35,15 @@ Vue.component('app-header', {
         </header>    
     `,
     data: function() {
-      return {};
+      return {
+          uid: localStorage.getItem('id')
+        // uid: 2
+      }
+    },
+    watch: {
+        uid () {
+            this.uid = localStorage.getItem('id')
+        } 
     }
 });
 
@@ -262,6 +271,30 @@ const Logout = Vue.component('logout', {
   `,
   data: function () {
       return {}
+  },
+  mounted () {
+    fetch(`/api/auth/logout`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': token,
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+        },
+        credentials: 'same-origin'
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log(data)
+        if (!data.errors) {
+            // successful logout
+            console.log(data.message) // FEEEEDBAAAACK
+            localStorage.removeItem('id')
+            localStorage.removeItem('jwt_token')
+            router.push({name: 'home'})
+        } else {
+            console.error(data.erros)
+            router.pop()
+        }
+    })
   }
 });
 
