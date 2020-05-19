@@ -180,9 +180,13 @@ def follow_user(user_id):
             return jsonify({"message": "You are now following that user"})
         else:
             # unfollow
-            return jsonify({'code': -1, "message": "You are already following that user", 'errors': []})
+            db.session.delete(follow)
+            db.session.commit()
+            followers = Follow.query.filter_by(follower_id=target_id).count()
+            return jsonify({"message": "You are no longer following that user"})
+            # return jsonify({'code': -1, "message": "You are already following that user", 'errors': []})
     else:
-        return jsonify({'code': -1, 'message': 'Target user does not exit/User cannot follow oneself', 'errors': [] })
+        return jsonify({'code': -1, 'message': 'Target user does not exist/User cannot follow oneself', 'errors': [] })
 
 def getUserID():
     """Returns the user ID in the JWT token payload"""

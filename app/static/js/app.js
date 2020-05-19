@@ -383,7 +383,8 @@ const Profile = Vue.component('profile', {
             </div>  
 
             <div>
-              <button @click="follow()" class="btn btn-primary btn-block">Follow</button>
+              <button @click="follow()" class="btn btn-success btn-block" v-if="following">Following</button>
+              <button @click="follow()" class="btn btn-primary btn-block" v-else>Follow</button>
             </div>
           </div>
         </div>
@@ -478,15 +479,13 @@ const Profile = Vue.component('profile', {
           console.log(data)
           if (responseStatus(data)) {
             // success
-            this.$root.saveFeedback(message=data.message)
+            // this.$root.saveFeedback(message=data.message)
+            this.getFollowerCount(uid)
           } else {
             console.log("ERROR")
             this.$root.saveFeedback(message=data.message, erros=data.errors, code=data.code)
           }
         })
-        if (this.followers !== null) {
-            this.followers = this.followers + 1
-        }
     },
     getFollowerCount (uid) {
         fetch(`/api/users/${uid}/follow`, {
@@ -504,6 +503,7 @@ const Profile = Vue.component('profile', {
             console.log(data.followers)
             if (data.followers !== null) {
                 this.followers = data.followers
+                this.following = data.following
             } else {
                 console.log("Error retrieving follower count")
                 this.followers = 0
@@ -675,6 +675,7 @@ const Post = Vue.component('post', {
     mounted () {
         this.post_id = this.$route.params.post_id
         this.post = this.$route.params.post
+
         fetch(`/api/posts/${this.post_id}/likes`, {
             method: "GET",
             headers: {
