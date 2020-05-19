@@ -17,14 +17,17 @@ Vue.component('app-header', {
                   <li class="nav-item active">
                     <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
                   </li>
-                  <li class="nav-item" v-if="uid">
+                  <li class="nav-item" v-if="$root.uid">
                     <a class="nav-link" href="/explore">Explore</a>
                   </li>
-                  <li class="nav-item" v-if="uid">
-                    <a class="nav-link" :href="'/users/' + uid">My Profile</a>
+                  <li class="nav-item" v-if="$root.uid">
+                    <a class="nav-link" :href="'/users/' + $root.uid">My Profile</a>
                   </li>
-                  <li class="nav-item" v-if="uid"  >
-                    <a class="nav-link" href="/logout" @click="uid=null">Logout</a>
+                  <li class="nav-item" v-if="$root.uid">
+                    <a class="nav-link" href="/logout" @click="$root.uid=null">Logout</a>
+                  </li>
+                  <li class="nav-item" v-if="!$root.uid">
+                    <a class="nav-link" href="/login">Login</a>
                   </li>
                 </ul>
                 </ul>
@@ -64,27 +67,25 @@ Vue.component('app-footer', {
 const Feedback = Vue.component('feedback', {
     template: `
     <div>
-        {{$root.errors}}
-        {{$root.message}}
         <div v-if="$root.errors || $root.message">
           <div 
               class="bg-light border border-danger rounded text-danger p-2" 
               v-if="$root.code || $root.errors"
           >
-          <p>{{ $root.message }}</p>
-          <ul class="">
-              <li v-for="(error, index) in $root.errors " :key="index">{{ error }}</li>
-          </ul>
+            <p>{{ $root.message }}</p>
+            <ul class="">
+                <li v-for="(error, index) in $root.errors " :key="index">{{ error }}</li>
+            </ul>
           </div>
 
           <div 
               class="bg-light border border-success rounded text-success p-2" 
               v-else
           >
-          <p>{{ $root.message }}</p>
-          <ul class="">
-              <li v-for="(error, index) in $root.errors " :key="index">{{ error }}</li>
-          </ul>
+            <p>{{ $root.message }}</p>
+            <ul class="">
+                <li v-for="(error, index) in $root.errors " :key="index">{{ error }}</li>
+            </ul>
           </div>
         </div>
     </div>
@@ -272,12 +273,10 @@ const Login = Vue.component('login', {
 
 const Logout = Vue.component('logout', {
   template: `
-  <div>
-      <h1>Logout: may need sumn special</h1>
-  </div>
+  <div>Logging out {{ dots }}</div>
   `,
-  data: function () {
-      return {}
+  data () {
+      return {dots: '.'}
   },
   mounted () {
     fetch(`/api/auth/logout`, {
@@ -296,7 +295,14 @@ const Logout = Vue.component('logout', {
             console.log(data.message) // FEEEEDBAAAACK
             localStorage.removeItem('id')
             localStorage.removeItem('jwt_token')
-            router.push({name: 'home'})
+            this.$root.clearMessages()
+
+            setInterval(() => { this.dots = this.dots + '.'}, 500)
+            setTimeout(() => {
+              
+              router.push({name: 'home'})
+            }, 2000);
+            
         } else {
             console.error(data.erros)
             router.pop()
@@ -692,12 +698,14 @@ let app = new Vue({
   el: "#app",
   router,
   data: {
+    uid: localStorage.getItem('id'),
     code: null,
     message: null,
     errors: null
   },
   methods: {
     clearMessages () {
+      this.uid = localStorage.getItem('id'),
       this.code = null,
       this.message = null,
       this.errors = null
