@@ -378,7 +378,7 @@ const Profile = Vue.component('profile', {
       :key="index"
       class=""
     >
-      <div class="card-group">
+      <div class="card-deck">
         <div v-for="(post, pindex) in row" :key="pindex">
           <div 
             class="card"
@@ -386,11 +386,10 @@ const Profile = Vue.component('profile', {
             @click="viewPost(post)"
           >
             <img 
-              class="card-img-top"
+              class="profile-post"
               :src="$uploads + post.photo" 
               :alt="post.photo"
             >
-            <div class="card-body"></div>
           </div>
 
           <div 
@@ -568,12 +567,12 @@ const NewPost = Vue.component('new-post', {
 
 const Post = Vue.component('post', {
     template: `
-    <div class="center-form">
-        <div class="card" v-if="post">
+    <div class="center-form d-flex justify-content-center">
+        <div class="card post-card" v-if="post">
             <img 
               :src="$uploads + post.photo" 
               alt="post photo" 
-              class="card-img-top profile-post"
+              class="card-img-top"
             >
             <div class="card-body">
                 <div class="mt-3 mb-2">

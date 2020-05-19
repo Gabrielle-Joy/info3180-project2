@@ -24,5 +24,11 @@ footer  {
 }
 
 .profile-post {
-    height: 20vw;
+    height: 25vw;
+    width: 25vw;
+}
+
+.post-card {
+    /* height: 35vw; */
+    width: 35vw;
 }
