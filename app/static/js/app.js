@@ -54,20 +54,6 @@ Vue.component('app-header', {
     }
 });
 
-Vue.component('app-footer', {
-    template: `
-        <footer class="mt-5">
-            <div class="container">
-                <p>Copyright &copy {{ year }} Flask Inc.</p>
-            </div>
-        </footer>
-    `,
-    data: function() {
-        return {
-            year: (new Date).getFullYear()
-        }
-    }
-});
 
 /* Feedback container - container for displaying error/success messages*/
 const Feedback = Vue.component('feedback', {
@@ -97,12 +83,36 @@ const Feedback = Vue.component('feedback', {
 /* Router Components */
 const Home = Vue.component('home', {
   template: `
-  <div>
-      <h1>Hello there! Welcome to Photogram!</h1>
+  <div class="centered">
+    <div class="home-image">
+      <img src="../static/images/dark-labs.jpg" width="270" height="270" alt="black girl in orange crew t-shirt"/>
+    </div>
+    <div class="card home-card" style="width: 18rem;">
+      <div class="card-body">
+        <h5 class="card-title curly">
+        <img src="../static/images/interface.png" class="nav-logo d-inline-block align-top" width="30" height="30" alt="Photogram logo"/>
+          Photogram
+        </h5>
+        
+        <p class="card-text share">Share photos of your favourite moments with friends, family and the world.</p>
+        <div class="reg-log-btn">
+          <button @click="redirectToRegister()" class="btn btns btn-success reg-log-btn">Register</button>
+          <button @click="redirectToLogin()" class="btn btns btn-primary reg-log-btn">Login</button>
+        </div>
+      </div>
+    </div>
   </div>
   `,
   data: function () {
-      return {};
+      return {
+      }
+  }, methods: {
+      redirectToRegister() {
+        this.$router.push({ path: '/register' });
+      },
+      redirectToLogin() {
+        this.$router.push({ path: '/login' });
+      }
   }
 });
 

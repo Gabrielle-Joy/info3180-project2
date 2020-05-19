@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Leckerli+One&display=swap');
+
+
 body {
     padding-top: 5rem;
     background-color: rgba(238, 238, 255, 1);
@@ -26,3 +29,47 @@ footer  {
 .profile-post {
     height: 25vw;
 }
+
+/*  MAINLY HOMEPAGE     */
+
+.centered {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin-top: -50px;
+    margin-left: -250px;
+  }
+
+
+  .home-image {
+      float: left;
+      border-radius: .25rem;
+      padding-top: 0.4rem;
+      padding-right: 1rem;
+  }
+
+  .home-card {
+    float: left;
+  }
+
+  .curly {
+    font-family: 'Leckerli One', cursive;
+    font-size: 1.7rem;
+    text-align: center;
+  }
+
+  .share {
+    margin-top: 1.7rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .reg-log-btn {
+    text-align: center;
+    display: flex;
+    margin-bottom: 20px;
+  }
+
+  .btns {
+    flex: 1;
+    margin: 3px;
+  }
