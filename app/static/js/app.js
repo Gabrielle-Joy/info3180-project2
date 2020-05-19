@@ -1,4 +1,5 @@
-Vue.prototype.$baseurl = 'localhost:8080'
+Vue.prototype.$baseurl = 'http://localhost:8080'
+Vue.prototype.$uploads = '/static/uploads/'
 /* Add your Application JavaScript */
 Vue.component('app-header', {
     template: `
@@ -241,7 +242,7 @@ const Login = Vue.component('login', {
         if (!res.errors) {
             // successful login
             console.log("Success")
-            localStorage.setItem('token', res.token);
+            localStorage.setItem('jwt_token', res.token);
             localStorage.setItem('id', res.user_id);
             router.push({name: 'home'})
             console.log(localStorage.getItem('jwt_token'))
@@ -284,15 +285,15 @@ const Profile = Vue.component('profile', {
 
       <div class="row no-gutters p-4" style="width: auto;">
 
-        <div class="col-md-2">
+        <div class="col-md-3">  
           <img 
-            src="https://api.time.com/wp-content/uploads/2017/12/terry-crews-person-of-year-2017-time-magazine-2.jpg" 
+            :src="$uploads + profile.profile_photo" 
             class="card-img" 
             alt="profile-picture"
           >
         </div>
 
-        <div class="col-md-10 d-flex">
+        <div class="col-md-9 d-flex">
           <div class="card-body w-50">
             <h3 class="card-title text-dark font-weight-bold ">{{ profile.fullname }}</h3>
             <div class="text-secondary">
@@ -313,7 +314,7 @@ const Profile = Vue.component('profile', {
               </div>
 
               <div class="d-flex align-items-center mt-3">
-                <p>{{ 'Bio Here...' }}</p>
+                <p>{{ profile.biography }}</p>
               </div>
             </div>
           </div>
@@ -321,18 +322,18 @@ const Profile = Vue.component('profile', {
           <div class="card-body p-5">
             <div class="d-flex mb-5">
               <div class="w-50 text-center">
-                <p>{{ profile.posts.length }}</p>
+                <p>{{ postCount }}</p>
                 <p class="text-muted">Posts</p>
               </div>
 
               <div class="w-50 text-center">
-                <p>{{ followers }}</p>
+                <p>{{ followerCount }}</p>
                 <p class="text-muted">Followers</p>
               </div>
             </div>  
 
             <div>
-              <button class="btn btn-primary btn-block">Follow</button>
+              <button @click="follow()" class="btn btn-primary btn-block">Follow</button>
             </div>
           </div>
         </div>
@@ -352,8 +353,8 @@ const Profile = Vue.component('profile', {
           >
             <img 
               class="profile-post"
-              :src="post.photo" 
-              :alt="'photo'"
+              :src="$uploads + post.photo" 
+              :alt="post.photo"
             >
           </div>
 
@@ -364,23 +365,15 @@ const Profile = Vue.component('profile', {
         </div> 
       </div>
     </div>
+    {{ followers }}
+    {{ this.$uploads + 'hello.jpg' }}
   </div>
   `,
   data: function () {
       return {
-        followers: 10,
+        followers: null,
         rowlen: 3,
-        profile: {},
-        posts: [
-          {
-            photo: 'https://pbs.twimg.com/media/Dwv-JlDUUAA-8FK.jpg',
-            caption: 'THis is a post about a dog'
-          },
-          {
-            photo: 'https://www.biography.com/.image/t_share/MTE5NDg0MDYwNjkzMjY3OTgz/terry-crews-headshot-600x600jpg.jpg',
-            caption: "Headshot I took for my first acting audition"
-          }
-        ]
+        profile: {}
       }
   },
   computed: {
@@ -392,25 +385,37 @@ const Profile = Vue.component('profile', {
         }
     },
     photorows () {
-      const prows = []
-      for (let index = 0; index < this.rows; index++) {
-        prows.push([])
-        for (let i = 0; i < this.rowlen; i++) {
-          prows[index].push(this.profile.posts[(index * this.rowlen) + i])
+        const prows = []
+        if (this.profile.posts) {
+            for (let index = 0; index < this.rows; index++) {
+                prows.push([])
+                for (let i = 0; i < this.rowlen; i++) {
+                prows[index].push(this.profile.posts[(index * this.rowlen) + i])
+                }
+            }
         }
-      }
-      return prows
-    }
+        return prows
+    },
+    postCount () {
+        return this.profile.posts ? this.profile.posts.length : '?'
+    },
+    followerCount () {
+        return this.followers != null ? this.followers : '?'
+    },
+    
   },
   methods: {
     follow () {
-        this.followers = this.followers + 1
+        if (this.followers !== null) {
+            this.followers = this.followers + 1
+        }
     },
     getFollowerCount (uid) {
-        fetch(`${this.$baseurl}/api/users/${uid}/follow`, {
+        fetch(`/api/users/${uid}/follow`, {
             method: "GET",  
             headers: {
                 'X-CSRFToken': token,
+                'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
             },
             credentials: 'same-origin'
         })
@@ -418,21 +423,24 @@ const Profile = Vue.component('profile', {
             return res.json()
         })
         .then(data => {
-            console.log(data)
-            if (data.followers) {
+            console.log(data.followers)
+            if (data.followers !== null) {
                 this.followers = data.followers
             } else {
                 console.log("Error retrieving follower count")
                 this.followers = 0
             }
         })
+    },
+    imgsrc (src) {
+        return this.$uploads + src
     }
   },
   mounted () {
-      // fetch profile          
-
-    const uid = this.$route.params.user_id   
-    fetch(`api/users/${uid}`, {
+    // fetch profile          
+    const uid = this.$route.params.user_id
+    console.log(`/api/users/${uid}`)   
+    fetch(`${this.$baseurl}/api/users/${uid}`, {
         method: "GET",
         headers: {
             'X-CSRFToken': token,
@@ -445,10 +453,11 @@ const Profile = Vue.component('profile', {
         return res.json()
     })
     .then(data => {
+        console.log('PROFILE')
+        console.log(data)
         this.profile = data
-        console.log(this.profile)
+        
     })
-
     this.getFollowerCount(uid)
 
   }
@@ -489,10 +498,6 @@ const Post = Vue.component('post', {
     login_user () {
       el = document.getElementById('post-form')
       form = new FormData(el)
-      // this.errorList = ["KILL"]
-      // console.log(this.errors)
-      // this.messages = ["SUCCESSSSS!!"]
-      // console.log(messages)
 
       // send api request
       fetch(`api/users/${user_id}/posts`, {
