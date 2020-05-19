@@ -97,7 +97,7 @@ def get_user_details(user_id):
             'location': user.location,
             'biography': user.biography,
             'profile_photo': user.profile_picture,
-            'joined_on': user.date_created,
+            'joined_on': user.date_created.strftime("%b %d, %Y"),
             'posts': get_post_helper(user_id)
         }
         return jsonify(data)
@@ -152,7 +152,7 @@ def get_post_helper(user_id):
             "user_id": post.user_id,
             "photo": post.photo,
             "description": post.caption,
-            "created_on": post.created_on
+            "created_on": post.created_on.strftime("%b %d, %Y")
         })
     return lst
 
@@ -237,7 +237,7 @@ def all_posts(post_id=None):
             "user_id": post.user_id,
             "photo": post.photo,
             "caption": post.caption,
-            "created_on": post.created_on,
+            "created_on": post.created_on.strftime("%b %d, %Y"),
             "likes": likes
         })
 
