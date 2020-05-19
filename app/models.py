@@ -1,5 +1,6 @@
 from . import db
-from datetime import date, datetime
+import datetime
+from datetime import date
 from werkzeug.security import generate_password_hash
 
 
@@ -10,13 +11,13 @@ class Post(db.Model):
     user_id = db.Column(db.Integer, nullable=False)
     photo = db.Column(db.String(120), nullable=False)
     caption = db.Column(db.String(150))
-    created_on = db.Column(db.DateTime())
+    created_on = db.Column(db.Date())
 
     def __init__(self, user_id, photo, caption):
         self.user_id = user_id
         self.photo = photo
         self.caption = caption
-        self.created_on = datetime.now()
+        self.created_on = datetime.datetime.now()
 
     def __repr__(self):
         return '<ID {0}\nUserID {1}\nPhoto {2}>'.format(self.id, self.user_id, self.photo)
@@ -37,7 +38,7 @@ class User(db.Model):
     location = db.Column(db.String(40))
     biography = db.Column(db.String(250))
     profile_picture = db.Column(db.String(120), nullable=False) # stores the name of the image file to be rendered
-    date_created = db.Column(db.DateTime())
+    date_created = db.Column(db.Date())
 
     def __init__(self, username, password, first_name, last_name, email, location, biography, profile_picture):
         self.username = username
@@ -48,7 +49,7 @@ class User(db.Model):
         self.location = location
         self.biography = biography
         self.profile_picture = profile_picture
-        self.date_created = datetime.now()
+        self.date_created = datetime.datetime.now()
 
     def is_authenticated(self):
         return True
