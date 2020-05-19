@@ -10,8 +10,8 @@ import jwt
 import datetime
 from app import app, db
 from app.utils import *
-from app.forms import *
-from app.models import *
+from app.forms import RegisterForm, LoginForm, PostForm
+from app.models import Post, User, Like, Follow
 from flask import jsonify, render_template, request, url_for, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
