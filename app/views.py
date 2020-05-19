@@ -70,11 +70,7 @@ def login():
         return jsonify({
             'code': -1,
             'message': 'Incorrect Username or Password',
-<<<<<<< HEAD
             'errors': []}, 401)
-=======
-            'errors': []})
->>>>>>> backend
     else:
         return jsonify({'code': -1, 'message': 'Login Failed', 'errors': form_errors(form)})
 
