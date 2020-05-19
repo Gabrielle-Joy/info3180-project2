@@ -296,11 +296,11 @@ const Logout = Vue.component('logout', {
             localStorage.removeItem('jwt_token')
             this.$root.clearFeedback()
 
-            setInterval(() => { this.dots = this.dots + '.'}, 500)
+            setInterval(() => { this.dots = this.dots + '.'}, 5)
             setTimeout(() => {
               
               router.push({name: 'home'})
-            }, 2000);
+            }, 200);
             
         } else {
             console.error(data.erros)

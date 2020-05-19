@@ -66,7 +66,7 @@ def login():
         if user is not None and check_password_hash(user.password, password):
             token = jwt.encode({'user_id': user.id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'])
             return jsonify({'user_id': user.id, 'token': token.decode('UTF-8')})
-        return jsonify({
+        return make_response({
             'code': -1,
             'message': 'Incorrect Username or Password',
             'errors': []}, 401)
@@ -205,11 +205,19 @@ def get_num_followers(user_id):
     else:
         return jsonify({'code': -1, 'message': 'User does not exist', 'errors': [] })
 
+@app.route('/api/posts/<int:post_id>')
 @app.route('/api/posts', methods=["GET"])
 @auth_required
-def all_posts():
+def all_posts(post_id=None):
     data = []
-    posts = Post.query.all()
+
+    if post_id == None:
+        posts = Post.query.all()
+    else:
+        posts = Post.query.filter_by(id=post_id).all()
+
+    if posts == []:
+        return jsonify({'code': -1, "message": "Post does not exist", 'errors': []})
 
     for post in posts:
         likes = Like.query.filter_by(post_id=post.id).count()
