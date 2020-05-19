@@ -66,7 +66,7 @@ Vue.component('app-footer', {
 /* Feedback container - container for displaying error/success messages*/
 const Feedback = Vue.component('feedback', {
     template: `
-    <div>
+    <div class="mb-3">
         <div v-if="$root.errors || $root.message">
           <div 
               class="bg-light border border-danger rounded text-danger p-2" 
@@ -256,12 +256,11 @@ const Login = Vue.component('login', {
             // successful login
             localStorage.setItem('jwt_token', res.token);
             localStorage.setItem('id', res.user_id);
-            this.$root.clearMessages()
-            this.$root.message = "Successful login"
+            this.$root.saveFeedback(message="Successful login")
             router.push({name: 'home'})
         } else {
             // failed login
-            this.$root.clearMessages()
+            this.$root.clearFeedback()
             this.$root.errors = res.errors
             this.$root.message = res.message
             console.log("ERRROR")
@@ -295,7 +294,7 @@ const Logout = Vue.component('logout', {
             console.log(data.message) // FEEEEDBAAAACK
             localStorage.removeItem('id')
             localStorage.removeItem('jwt_token')
-            this.$root.clearMessages()
+            this.$root.clearFeedback()
 
             setInterval(() => { this.dots = this.dots + '.'}, 500)
             setTimeout(() => {
@@ -437,7 +436,7 @@ const Profile = Vue.component('profile', {
             for (let index = 0; index < this.rows; index++) {
                 prows.push([])
                 for (let i = 0; i < this.rowlen; i++) {
-                prows[index].push(this.profile.posts[(index * this.rowlen) + i])
+                  prows[index].push(this.profile.posts[(index * this.rowlen) + i])
                 }
             }
         }
@@ -453,6 +452,25 @@ const Profile = Vue.component('profile', {
   },
   methods: {
     follow () {
+      const uid = this.$route.params.user_id
+        fetch(`/api/users/${uid}/follow`, {
+          method: "GET",  
+          headers: {
+              'X-CSRFToken': token,
+              'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+          },
+          credentials: 'same-origin'
+        })
+        .then(res => res.json)
+        .then(data => {
+          console.log(data)
+          if (requestStatus(data)) {
+            // success
+            this.$root.saveFeedback(message=data.message)
+          } else {
+            this.$root.saveFeedback(erros=data.errors, code=data.code)
+          }
+        })
         if (this.followers !== null) {
             this.followers = this.followers + 1
         }
@@ -704,11 +722,14 @@ let app = new Vue({
     errors: null
   },
   methods: {
-    clearMessages () {
+    clearFeedback () {
+      this.saveFeedback()
+    },
+    saveFeedback (message = null, errors = null, code = null) {
       this.uid = localStorage.getItem('id'),
-      this.code = null,
-      this.message = null,
-      this.errors = null
+      this.code = code,
+      this.message = message,
+      this.errors = errors
     }
   }
 });
