@@ -10,8 +10,8 @@ import jwt
 import datetime
 from app import app, db
 from app.utils import *
-from app.forms import *
-from app.models import *
+from app.forms import RegisterForm, LoginForm, PostForm
+from app.models import Post, User, Like, Follow
 from flask import jsonify, render_template, request, url_for, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -51,6 +51,7 @@ def register():
         else:
             errors.append('Username already in use')
     return jsonify({
+        'code': -1,
         'message':'User not created',
         'errors':form_errors(form) + errors
         })
@@ -66,10 +67,14 @@ def login():
         if user is not None and check_password_hash(user.password, password):
             token = jwt.encode({'user_id': user.id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'])
             return jsonify({'user_id': user.id, 'token': token.decode('UTF-8')})
-        return make_response({
+        return jsonify({
             'code': -1,
             'message': 'Incorrect Username or Password',
+<<<<<<< HEAD
             'errors': []}, 401)
+=======
+            'errors': []})
+>>>>>>> backend
     else:
         return jsonify({'code': -1, 'message': 'Login Failed', 'errors': form_errors(form)})
 

@@ -1,4 +1,5 @@
 from . import db
+import datetime
 from datetime import date
 from werkzeug.security import generate_password_hash
 
@@ -15,7 +16,7 @@ class Post(db.Model):
         self.user_id = user_id
         self.photo = photo
         self.caption = caption
-        self.created_on = date.today()
+        self.created_on = datetime.datetime.now()
 
     def __repr__(self):
         return '<ID {0}\nUserID {1}\nPhoto {2}>'.format(self.id, self.user_id, self.photo)
@@ -47,7 +48,7 @@ class User(db.Model):
         self.location = location
         self.biography = biography
         self.profile_picture = profile_picture
-        self.date_created = date.today()
+        self.date_created = datetime.datetime.now()
 
     def is_authenticated(self):
         return True
