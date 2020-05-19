@@ -196,12 +196,18 @@ def getUserID():
 @app.route('/api/users/<int:user_id>/follow', methods=["GET"])
 @auth_required
 def get_num_followers(user_id):
+    """Returns the number of followers a user has and if you're following them"""
     user = User.query.get(user_id)
+    my_id = getUserID()
 
     #check if user exists
     if user:
+        following = Follow.query.filter_by(user_id=my_id, follower_id=user_id).count()
         num_followers = Follow.query.filter_by(follower_id=user_id).count()
-        return jsonify({'followers': num_followers})
+        return jsonify({
+            'followers': num_followers, 
+            'following': True if following == 1 else False
+        })
     else:
         return jsonify({'code': -1, 'message': 'User does not exist', 'errors': [] })
 
