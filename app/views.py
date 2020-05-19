@@ -10,8 +10,8 @@ import jwt
 import datetime
 from app import app, db
 from app.utils import *
-from app.forms import *
-from app.models import *
+from app.forms import RegisterForm, LoginForm, PostForm
+from app.models import Post, User, Like, Follow
 from flask import jsonify, render_template, request, url_for, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -51,6 +51,7 @@ def register():
         else:
             errors.append('Username already in use')
     return jsonify({
+        'code': -1,
         'message':'User not created',
         'errors':form_errors(form) + errors
         })
@@ -58,7 +59,6 @@ def register():
 @app.route('/api/auth/login', methods=["POST"])
 def login():
     form = LoginForm()
-    print(form.username.data)
     if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
@@ -201,20 +201,34 @@ def getUserID():
 @app.route('/api/users/<int:user_id>/follow', methods=["GET"])
 @auth_required
 def get_num_followers(user_id):
+    """Returns the number of followers a user has and if you're following them"""
     user = User.query.get(user_id)
+    my_id = getUserID()
 
     #check if user exists
     if user:
+        following = Follow.query.filter_by(user_id=my_id, follower_id=user_id).count()
         num_followers = Follow.query.filter_by(follower_id=user_id).count()
-        return jsonify({'followers': num_followers})
+        return jsonify({
+            'followers': num_followers, 
+            'following': True if following == 1 else False
+        })
     else:
         return jsonify({'code': -1, 'message': 'User does not exist', 'errors': [] })
 
+@app.route('/api/posts/<int:post_id>')
 @app.route('/api/posts', methods=["GET"])
 @auth_required
-def all_posts():
+def all_posts(post_id=None):
     data = []
-    posts = Post.query.all()
+
+    if post_id == None:
+        posts = Post.query.all()
+    else:
+        posts = Post.query.filter_by(id=post_id).all()
+
+    if posts == []:
+        return jsonify({'code': -1, "message": "Post does not exist", 'errors': []})
 
     for post in posts:
         likes = Like.query.filter_by(post_id=post.id).count()
