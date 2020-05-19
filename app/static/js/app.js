@@ -350,6 +350,7 @@ const Profile = Vue.component('profile', {
           <div 
             class="card"
             v-if="post"
+            @click="viewPost(post)"
           >
             <img 
               class="profile-post"
@@ -365,13 +366,12 @@ const Profile = Vue.component('profile', {
         </div> 
       </div>
     </div>
-    {{ followers }}
-    {{ this.$uploads + 'hello.jpg' }}
   </div>
   `,
   data: function () {
       return {
         followers: null,
+        following: false,
         rowlen: 3,
         profile: {}
       }
@@ -432,8 +432,8 @@ const Profile = Vue.component('profile', {
             }
         })
     },
-    imgsrc (src) {
-        return this.$uploads + src
+    viewPost (post) {
+        router.push({name: 'post', params: {post_id: post.id, post: post}})
     }
   },
   mounted () {
@@ -463,69 +463,153 @@ const Profile = Vue.component('profile', {
   }
 });
 
-const Post = Vue.component('post', {
-  template: `
-  <div class="center-form">
-    <div class="page-header">
-      <h3>New Post</h3>
-    </div>
-
-    <div class="border border-info p-3 bg-light rounded shadow">
-      <form @submit.prevent="login_user()" id="post-form">
-        <div class="form-group">
-          <label for="photo">Photo</label>
-          <input type="file" class="form-control-file" name="photo" id="photo">
+const NewPost = Vue.component('new-post', {
+    template: `
+    <div class="center-form">
+        <div class="page-header">
+        <h3>New Post</h3>
         </div>
 
-        <div class="form-group">
-          <label for="caption">Caption</label>
-          <textarea 
-            name="caption" id="caption" 
-            rows="5" 
-            class="form-control" 
-            placeholder="Enter a caption for your post"
-          ></textarea>
-        </div>
-        
-      </form>
-    </div>
-  </div>
-  `,
-  data: function () {
-      return {}
-  },
-  methods: {
-    login_user () {
-      el = document.getElementById('post-form')
-      form = new FormData(el)
+        <div class="border border-info p-3 bg-light rounded shadow">
+        <form @submit.prevent="make_post()" id="post-form">
+            <div class="form-group">
+            <label for="post_photo">Photo</label>
+            <input type="file" class="form-control-file" name="post_photo" id="post_photo">
+            </div>
 
-      // send api request
-      fetch(`api/users/${user_id}/posts`, {
-          method: "POST",
-          body: form,
-          headers: {
-              'X-CSRFToken': token
-          },
-          credentials: 'same-origin'
-      })
-      .then(res => {
-          return res.json()
-      })
-      .then(res => {
-          console.log(res)
-          if(res.status == 201) {
-              // successful register
-              // messages = [res.message]
-              // messages = ["SUCCESSSSS!!"]
-              router.push({name: 'home'})
-          } else {
-              // failed register
-              // errors = ["ERROR!!"]
-              // errors = [res.errors]
-          }
-      })
+            <div class="form-group">
+            <label for="bio">Description</label>
+            <textarea 
+                name="bio" id="bio" 
+                rows="5" 
+                class="form-control" 
+                placeholder="Enter a caption/description for your post"
+            ></textarea>
+            </div>
+
+            <div class="mt-2">
+            <button type="submit" class="btn btn-info btn-lg">Post!</button>
+            </div>
+            
+        </form>
+        </div>
+    </div>
+    `,
+    data: function () {
+        return {}
+    },
+    methods: {
+        make_post () {
+            el = document.getElementById('post-form')
+            form = new FormData(el)
+
+            // send api request
+            const uid = localStorage.getItem('id')
+            fetch(`/api/users/${uid}/posts`, {
+                method: "POST",
+                body: form,
+                headers: {
+                    'X-CSRFToken': token,
+                    'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+                },
+                credentials: 'same-origin'
+            })
+            .then(res => {
+                return res.json()
+            })
+            .then(data => {
+                console.log(data)
+                if (!data.errors) {
+                    // success
+                    console.log(data.message) // FEEDBACK
+                } else {
+                    console.error(data.errors)
+                }
+                
+                router.push({name: 'home'})
+            })
+        }
     }
-  }
+});
+
+const Post = Vue.component('post', {
+    template: `
+    <div class="center-form">
+        <div class="card" v-if="post">
+            <img :src="$uploads + post.photo" alt="post photo" class="card-img-top">
+            <div class="card-body">
+                <div class="mt-3 mb-2">
+                    <i @click="like()" class="far fa-heart" v-if="!liked"></i>
+                    <i @click="like()" class="fas fa-heart" v-else></i>
+                    {{ likes }}
+                </div>
+                <p>{{ post.description }}</p>
+                
+                <div>
+                    <small class="text-muted">{{ post.created_on }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    `,
+    data () {
+        return {
+            post_id: null,
+            post: null,
+            likes: null,
+            liked: false
+        }
+    },
+    methods: {
+        like () {
+            const body = JSON.stringify({
+                user_id: parseInt(localStorage.getItem('id')),
+                post_id: this.post_id
+            })
+            
+            fetch(`/api/posts/${this.post_id}/like`, {
+                method: "POST",
+                body: body,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': token,
+                    'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+                },
+                credentials: 'same-origin'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.errors) {
+                    // success
+                    console.log(data.message)
+                    this.likes = data.likes
+                } else {
+                    console.error(data.errors)
+                }
+            })
+            this.liked = !this.liked
+        }
+    },
+    mounted () {
+        this.post_id = this.$route.params.post_id
+        this.post = this.$route.params.post
+        fetch(`/api/posts/${this.post_id}/likes`, {
+            method: "GET",
+            headers: {
+                'X-CSRFToken': token,
+                'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+            },
+            credentials: 'same-origin'
+        })
+        .then(res => {
+            return res.json()
+        })
+        .then(data => {
+            console.log(data)
+            this.likes = data.likes
+            this.liked = data.liked
+        })
+    }
 });
 
 const NotFound = Vue.component('not-found', {
@@ -550,7 +634,8 @@ const router = new VueRouter({
       {name: 'logout', path: "/logout", component: Logout},
       {name: 'explore', path: "/explore", component: Explore},
       {name: 'profile', path: "/users/:user_id", component: Profile},
-      {name: 'post', path: "/posts/new", component: Post},
+      {name: 'new-post', path: "/posts/new", component: NewPost},
+      {name: 'post', path:"/post/:post_id", component: Post, props: true},
 
       // This is a catch all route in case none of the above matches
       {path: "*", component: NotFound}

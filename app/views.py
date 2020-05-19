@@ -226,6 +226,7 @@ def all_posts():
 @app.route('/api/posts/<int:post_id>/like', methods=["POST"])
 @auth_required
 def like_post(post_id):
+    print(request)
     data = request.json
 
     # obtaining the post_id from the POST boy rather than URL params
@@ -247,9 +248,23 @@ def like_post(post_id):
             likes = Like.query.filter_by(post_id=post_id).count()
             return jsonify({"message": "Post liked!", "likes": likes})
         else:
-            return jsonify({'code': -1, "message": "You already liked this post", 'errors': []})
+            # unlike post
+            db.session.delete(like)
+            db.session.commit()
+            likes = Like.query.filter_by(post_id=post_id).count()
+            return jsonify({"message": "Post unliked :(", "likes": likes})
     else:
         return jsonify({'code': -1, "message": "Post does not exist", 'errors': []})
+
+@app.route('/api/posts/<int:post_id>/likes', methods=["GET"])
+@auth_required
+def post_likes(post_id):
+    user_id = getUserID()
+    likes = Like.query.filter_by(post_id=post_id).count()
+    likes = likes if likes else 0
+
+    liked = True if Like.query.filter_by(user_id=user_id, post_id=post_id).first() else False
+    return jsonify({'likes': likes, 'liked': liked})
 
 
 
