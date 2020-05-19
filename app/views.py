@@ -69,7 +69,7 @@ def login():
         return make_response({
             'code': -1,
             'message': 'Incorrect Username or Password',
-            'errors': []}, 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
+            'errors': []}, 401)
     else:
         return jsonify({'code': -1, 'message': 'Login Failed', 'errors': form_errors(form)})
 

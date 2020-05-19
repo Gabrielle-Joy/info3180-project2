@@ -64,23 +64,28 @@ Vue.component('app-footer', {
 const Feedback = Vue.component('feedback', {
     template: `
     <div>
-        {{errors}}
-        <div 
-            class="bg-light border border-danger rounded text-danger p-2" 
-            v-if="errors.length > 0 && messages.length == 0"
-        >
-        <ul class="">
-            <li v-for="(error, index) in errors " :key="index">{{ error }}</li>
-        </ul>
-        </div>
+        {{$root.errors}}
+        {{$root.message}}
+        <div v-if="$root.errors || $root.message">
+          <div 
+              class="bg-light border border-danger rounded text-danger p-2" 
+              v-if="$root.code || $root.errors"
+          >
+          <p>{{ $root.message }}</p>
+          <ul class="">
+              <li v-for="(error, index) in $root.errors " :key="index">{{ error }}</li>
+          </ul>
+          </div>
 
-        <div 
-            class="border border-success rounded text-success p-2" 
-            v-if="messages.length > 0 && errors.length == 0"
-        >
-        <ul>
-            <li v-for="(message, index) in messages" :key="index">{{ message }}</li>
-        </ul>
+          <div 
+              class="bg-light border border-success rounded text-success p-2" 
+              v-else
+          >
+          <p>{{ $root.message }}</p>
+          <ul class="">
+              <li v-for="(error, index) in $root.errors " :key="index">{{ error }}</li>
+          </ul>
+          </div>
         </div>
     </div>
     `,
@@ -90,7 +95,7 @@ const Feedback = Vue.component('feedback', {
         messages: []
       }
     }
-})
+});
 
 /* Router Components */
 const Home = Vue.component('home', {
@@ -177,20 +182,19 @@ const Register = Vue.component('register', {
             },
             credentials: 'same-origin'
         })
-        .then(res => {
-          console.log(res)
-          return res.json() 
-        })
-        .then(res => {
-            console.log(res)
+        .then(res => res.json())
+        .then(data => {
+            console.log(data)
 
-            if (!res.errors) {
+            if (!data.errors ) {
               // success
-              console.log(res.message)
+              console.log(data.message)
+              this.$root.messages = [data.message]
               router.push({name: 'login'})
             } else {
               // failed register
-              console.log(res.errors)
+              this.$root.errors = data.errors
+              console.log(data.errors)
             }
         })
     }
@@ -246,16 +250,20 @@ const Login = Vue.component('login', {
       })
       .then(res => {
         console.log(res)
-        if (!res.errors) {
+
+        if (!res.errors && !res.code) {
             // successful login
-            console.log("Success")
             localStorage.setItem('jwt_token', res.token);
             localStorage.setItem('id', res.user_id);
+            this.$root.clearMessages()
+            this.$root.message = "Successful login"
             router.push({name: 'home'})
-            console.log(localStorage.getItem('jwt_token'))
         } else {
             // failed login
-            console.log(res.errors)
+            this.$root.clearMessages()
+            this.$root.errors = res.errors
+            this.$root.message = res.message
+            console.log("ERRROR")
         }          
       })
     }
@@ -682,5 +690,17 @@ const router = new VueRouter({
 // Instantiate our main Vue Instance
 let app = new Vue({
   el: "#app",
-  router
+  router,
+  data: {
+    code: null,
+    message: null,
+    errors: null
+  },
+  methods: {
+    clearMessages () {
+      this.code = null,
+      this.message = null,
+      this.errors = null
+    }
+  }
 });
