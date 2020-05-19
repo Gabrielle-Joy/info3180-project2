@@ -51,6 +51,7 @@ def register():
         else:
             errors.append('Username already in use')
     return jsonify({
+        'code': -1,
         'message':'User not created',
         'errors':form_errors(form) + errors
         })
@@ -65,10 +66,10 @@ def login():
         if user is not None and check_password_hash(user.password, password):
             token = jwt.encode({'user_id': user.id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'])
             return jsonify({'user_id': user.id, 'token': token.decode('UTF-8')})
-        return make_response({
+        return jsonify({
             'code': -1,
             'message': 'Incorrect Username or Password',
-            'errors': []}, 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
+            'errors': []})
     else:
         return jsonify({'code': -1, 'message': 'Login Failed', 'errors': form_errors(form)})
 
