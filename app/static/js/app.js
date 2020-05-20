@@ -72,8 +72,8 @@ Vue.component('app-header', {
 Vue.component('app-footer', {
     template: `
         <footer class="mt-5">
-            <hr>
             <div class="container">
+                <hr>  
                 <p>Photogram. {{ year }} Team Resumate.</p>
             </div>
         </footer>
