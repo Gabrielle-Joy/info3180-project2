@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Leckerli+One&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
 body {
@@ -28,8 +29,52 @@ footer  {
 
 .profile-post {
     height: 25vw;
-    width: 25vw;
+     width: 25vw;
 }
+
+/*  MAINLY HOMEPAGE     */
+
+.centered {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin-top: -50px;
+    margin-left: -250px;
+  }
+
+
+  .home-image {
+      float: left;
+      border-radius: .25rem;
+      padding-top: 0.4rem;
+      padding-right: 1rem;
+  }
+
+  .home-card {
+    float: left;
+  }
+
+  .curly {
+    font-family: 'Leckerli One', cursive;
+    font-size: 1.7rem;
+    text-align: center;
+  }
+
+  .share {
+    margin-top: 1.7rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .reg-log-btn {
+    text-align: center;
+    display: flex;
+    margin-bottom: 20px;
+  }
+
+  .btns {
+    flex: 1;
+    margin: 3px;
+  }
 
 .post-card {
     /* height: 35vw; */
