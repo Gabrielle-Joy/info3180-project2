@@ -28,6 +28,7 @@ Vue.prototype.$goTo = function(route, params={}) {
   router.push({name: route, params: params})
 }
 
+/* util values */
 Vue.prototype.$uploads = '/static/uploads/'
 
 /* Add your Application JavaScript */
@@ -304,6 +305,8 @@ const Logout = Vue.component('logout', {
         if (this.$validData(data)) {
             // successful logout
             this.$root.saveFeedback(message="You are logged out. See you later!")
+            localStorage.removeItem('jwt_token')
+            localStorage.removeItem('id')
             setInterval(() => { this.dots = this.dots + '.'}, 10)
             setTimeout(() => {
               router.push({name: 'home'})
@@ -752,10 +755,15 @@ let app = new Vue({
       this.saveFeedback()
     },
     saveFeedback (message = null, errors = null, code = null) {
-      this.uid = localStorage.getItem('id'),
+      // this.uid = localStorage.getItem('id'),
       this.code = code,
       this.message = message,
       this.errors = errors
+    }
+  },
+  watch: {
+    $route () {
+      this.uid = localStorage.getItem('id')
     }
   }
 });
