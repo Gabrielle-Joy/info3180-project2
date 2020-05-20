@@ -10,8 +10,8 @@ import jwt
 import datetime
 from app import app, db
 from app.utils import *
-from app.forms import *
-from app.models import *
+from app.forms import RegisterForm, LoginForm, PostForm
+from app.models import Post, User, Like, Follow
 from flask import jsonify, render_template, request, url_for, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -51,6 +51,7 @@ def register():
         else:
             errors.append('Username already in use')
     return jsonify({
+        'code': -1,
         'message':'User not created',
         'errors':form_errors(form) + errors
         })
@@ -58,7 +59,6 @@ def register():
 @app.route('/api/auth/login', methods=["POST"])
 def login():
     form = LoginForm()
-    print(form.username.data)
     if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
@@ -69,7 +69,7 @@ def login():
         return make_response({
             'code': -1,
             'message': 'Incorrect Username or Password',
-            'errors': []}, 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
+            'errors': []}, 401)
     else:
         return jsonify({'code': -1, 'message': 'Login Failed', 'errors': form_errors(form)})
 
@@ -97,7 +97,7 @@ def get_user_details(user_id):
             'location': user.location,
             'biography': user.biography,
             'profile_photo': user.profile_picture,
-            'joined_on': user.date_created,
+            'joined_on': user.date_created.strftime("%b %d, %Y"),
             'posts': get_post_helper(user_id)
         }
         return jsonify(data)
@@ -152,7 +152,7 @@ def get_post_helper(user_id):
             "user_id": post.user_id,
             "photo": post.photo,
             "description": post.caption,
-            "created_on": post.created_on
+            "created_on": post.created_on.strftime("%b %d, %Y")
         })
     return lst
 
@@ -160,6 +160,7 @@ def get_post_helper(user_id):
 @auth_required
 def follow_user(user_id):
     data = request.json
+    print(data)
 
     # the person to be followed. Obtaining info from the POST body rather than the route params
     target_id = data["follower_id"] 
@@ -178,9 +179,14 @@ def follow_user(user_id):
             db.session.commit()
             return jsonify({"message": "You are now following that user"})
         else:
-            return jsonify({'code': -1, "message": "You are already following that user", 'errors': []})
+            # unfollow
+            db.session.delete(follow)
+            db.session.commit()
+            followers = Follow.query.filter_by(follower_id=target_id).count()
+            return jsonify({"message": "You are no longer following that user"})
+            # return jsonify({'code': -1, "message": "You are already following that user", 'errors': []})
     else:
-        return jsonify({'code': -1, 'message': 'Target user does not exit/User cannot follow oneself', 'errors': [] })
+        return jsonify({'code': -1, 'message': 'Target user does not exist/User cannot follow oneself', 'errors': [] })
 
 def getUserID():
     """Returns the user ID in the JWT token payload"""
@@ -195,20 +201,34 @@ def getUserID():
 @app.route('/api/users/<int:user_id>/follow', methods=["GET"])
 @auth_required
 def get_num_followers(user_id):
+    """Returns the number of followers a user has and if you're following them"""
     user = User.query.get(user_id)
+    my_id = getUserID()
 
     #check if user exists
     if user:
+        following = Follow.query.filter_by(user_id=my_id, follower_id=user_id).count()
         num_followers = Follow.query.filter_by(follower_id=user_id).count()
-        return jsonify({'followers': num_followers})
+        return jsonify({
+            'followers': num_followers, 
+            'following': True if following == 1 else False
+        })
     else:
         return jsonify({'code': -1, 'message': 'User does not exist', 'errors': [] })
 
+@app.route('/api/posts/<int:post_id>')
 @app.route('/api/posts', methods=["GET"])
 @auth_required
-def all_posts():
+def all_posts(post_id=None):
     data = []
-    posts = Post.query.all()
+
+    if post_id == None:
+        posts = Post.query.all()
+    else:
+        posts = Post.query.filter_by(id=post_id).all()
+
+    if posts == []:
+        return jsonify({'code': -1, "message": "Post does not exist", 'errors': []})
 
     for post in posts:
         likes = Like.query.filter_by(post_id=post.id).count()
@@ -217,7 +237,7 @@ def all_posts():
             "user_id": post.user_id,
             "photo": post.photo,
             "caption": post.caption,
-            "created_on": post.created_on,
+            "created_on": post.created_on.strftime("%b %d, %Y"),
             "likes": likes
         })
 

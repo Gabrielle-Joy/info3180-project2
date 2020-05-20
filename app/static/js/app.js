@@ -1,10 +1,40 @@
-Vue.prototype.$baseurl = 'http://localhost:8080'
+/* util functions */
+Vue.prototype.$validData = function(data) {
+  return !data.errors && !data.code ? true : false
+}
+
+Vue.prototype.$processResponse = function(res) {
+  if (res.status === 401) {
+    // delete auth varibales
+    console.log(res)
+    localStorage.removeItem('jwt_token')
+    localStorage.removeItem('id')
+    res.json()
+    .then(data => {
+      let errors = [data.message]
+      if (data.errors) errors.push(data.errors)
+      console.log(data)
+      this.$root.saveFeedback(message="Please login to continue.", errors=errors, code=data.code)
+    })
+    router.push({name: 'login'})
+    return {}
+  } else {
+    return res.json()
+  }
+  
+}
+
+Vue.prototype.$goTo = function(route, params={}) {
+  router.push({name: route, params: params})
+}
+
+/* util values */
 Vue.prototype.$uploads = '/static/uploads/'
+
 /* Add your Application JavaScript */
 Vue.component('app-header', {
     template: `
         <header>
-        {{uid}}
             <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
               <a class="navbar-brand" href="/">
                 <img src="../static/images/interface.png" width="30" height="30" class="d-inline-block align-top" alt="mkk"/>
@@ -19,39 +49,32 @@ Vue.component('app-header', {
                   <li class="nav-item active">
                     <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
                   </li>
-                  <li class="nav-item" v-if="uid">
+                  <li class="nav-item" v-if="$root.uid">
                     <a class="nav-link" href="/explore">Explore</a>
                   </li>
-                  <li class="nav-item" v-if="uid">
-                    <a class="nav-link" :href="'/users/' + uid">My Profile</a>
+                  <li class="nav-item" v-if="$root.uid">
+                    <a class="nav-link" :href="'/users/' + $root.uid">My Profile</a>
                   </li>
-                  <li class="nav-item" v-if="uid"  >
-                    <a class="nav-link" href="/logout" @click="uid=null">Logout</a>
+                  <li class="nav-item" v-if="$root.uid">
+                    <a class="nav-link" href="/logout" @click="$root.uid=null">Logout</a>
+                  </li>
+                  <li class="nav-item" v-if="!$root.uid">
+                    <a class="nav-link" href="/login">Login</a>
                   </li>
                 </ul>
                 </ul>
               </div>
             </nav>
         </header>    
-    `,
-    data: function() {
-      return {
-          uid: localStorage.getItem('id')
-        // uid: 2
-      }
-    },
-    watch: {
-        uid () {
-            this.uid = localStorage.getItem('id')
-        } 
-    }
+    `
 });
 
 Vue.component('app-footer', {
     template: `
         <footer class="mt-5">
             <div class="container">
-                <p>Copyright &copy {{ year }} Flask Inc.</p>
+                <hr>  
+                <p>Photogram. {{ year }} Team Resumate.</p>
             </div>
         </footer>
     `,
@@ -65,24 +88,27 @@ Vue.component('app-footer', {
 /* Feedback container - container for displaying error/success messages*/
 const Feedback = Vue.component('feedback', {
     template: `
-    <div>
-        {{errors}}
-        <div 
-            class="bg-light border border-danger rounded text-danger p-2" 
-            v-if="errors.length > 0 && messages.length == 0"
-        >
-        <ul class="">
-            <li v-for="(error, index) in errors " :key="index">{{ error }}</li>
-        </ul>
-        </div>
+    <div class="mb-3">
+        <div v-if="$root.errors || $root.message">
+          <div 
+              class="bg-light border border-danger rounded text-danger p-2" 
+              v-if="$root.code || $root.errors"
+          >
+            <p>{{ $root.message }}</p>
+            <ul class="" v-if="$root.errors">
+                <li v-for="(error, index) in $root.errors " :key="index">{{ error }}</li>
+            </ul>
+          </div>
 
-        <div 
-            class="border border-success rounded text-success p-2" 
-            v-if="messages.length > 0 && errors.length == 0"
-        >
-        <ul>
-            <li v-for="(message, index) in messages" :key="index">{{ message }}</li>
-        </ul>
+          <div 
+              class="bg-light border border-success rounded text-success p-2" 
+              v-else
+          >
+            <p>{{ $root.message }}</p>
+            <ul class="" v-if="$root.errors">
+                <li v-for="(error, index) in $root.errors " :key="index">{{ error }}</li>
+            </ul>
+          </div>
         </div>
     </div>
     `,
@@ -92,17 +118,41 @@ const Feedback = Vue.component('feedback', {
         messages: []
       }
     }
-})
+});
 
 /* Router Components */
 const Home = Vue.component('home', {
   template: `
-  <div>
-      <h1>Hello there! Welcome to Photogram!</h1>
+  <div class="centered">
+    <div class="home-image">
+      <img src="../static/images/dark-labs.jpg" width="270" height="270" alt="black girl in orange crew t-shirt"/>
+    </div>
+    <div class="card home-card" style="width: 18rem;">
+      <div class="card-body">
+        <h5 class="card-title curly">
+        <img src="../static/images/interface.png" class="nav-logo d-inline-block align-top" width="30" height="30" alt="Photogram logo"/>
+          Photogram
+        </h5>
+        
+        <p class="card-text share">Share photos of your favourite moments with friends, family and the world.</p>
+        <div class="reg-log-btn">
+          <button @click="redirectToRegister()" class="btn btns btn-success reg-log-btn">Register</button>
+          <button @click="redirectToLogin()" class="btn btns btn-primary reg-log-btn">Login</button>
+        </div>
+      </div>
+    </div>
   </div>
   `,
   data: function () {
-      return {};
+      return {
+      }
+  }, methods: {
+      redirectToRegister() {
+        this.$router.push({ path: '/register' });
+      },
+      redirectToLogin() {
+        this.$router.push({ path: '/login' });
+      }
   }
 });
 
@@ -166,12 +216,11 @@ const Register = Vue.component('register', {
   },
   methods: {
     register_user () {
-      el = document.getElementById('register-form')
+        el = document.getElementById('register-form')
         form = new FormData(el)
-        // console.log(JSON.stringify(form))
 
         // send api request
-        fetch('api/users/register', {
+        fetch('/api/users/register', {
             method: "POST",
             body: form,
             headers: {
@@ -179,20 +228,18 @@ const Register = Vue.component('register', {
             },
             credentials: 'same-origin'
         })
-        .then(res => {
-          console.log(res)
-          return res.json() 
-        })
-        .then(res => {
-            console.log(res)
-
-            if (!res.errors) {
+        .then(res => this.$processResponse(res))
+        .then(data => {
+            console.log(data)
+            if (this.$validData(data) ) {
               // success
-              console.log(res.message)
+              console.log(data.message)
+              this.$root.saveFeedback(message=data.message)
               router.push({name: 'login'})
             } else {
               // failed register
-              console.log(res.errors)
+              this.$root.saveFeedback(message=data.message, erros=data.errors, code=data.code)
+              console.log(data.errors)
             }
         })
     }
@@ -242,35 +289,30 @@ const Login = Vue.component('login', {
           },
           credentials: 'same-origin'
       })
-      .then(res => {
-          console.log(res)
-          return res.json()
-      })
-      .then(res => {
-        console.log(res)
-        if (!res.errors) {
+      .then(res => this.$processResponse(res))
+      .then(data => {
+        console.log(data)
+        if (this.$validData(data)) {
             // successful login
-            console.log("Success")
-            localStorage.setItem('jwt_token', res.token);
-            localStorage.setItem('id', res.user_id);
+            localStorage.setItem('jwt_token', data.token);
+            localStorage.setItem('id', data.user_id);
+            this.$root.saveFeedback(message="Successful login")
             router.push({name: 'home'})
-            console.log(localStorage.getItem('jwt_token'))
         } else {
             // failed login
-            console.log(res.errors)
+            this.$root.saveFeedback(message=data.message, erros=data.errors, code=data.code)
         }          
       })
     }
   }
 });
+
 const Logout = Vue.component('logout', {
   template: `
-  <div>
-      <h1>Logout: may need sumn special</h1>
-  </div>
+  <div>Logging out {{ dots }}</div>
   `,
-  data: function () {
-      return {}
+  data () {
+      return {dots: '.'}
   },
   mounted () {
     fetch(`/api/auth/logout`, {
@@ -281,15 +323,19 @@ const Logout = Vue.component('logout', {
         },
         credentials: 'same-origin'
     })
-    .then(res => res.json())
+    .then(res => this.$processResponse(res))
     .then(data => {
         console.log(data)
-        if (!data.errors) {
+        if (this.$validData(data)) {
             // successful logout
-            console.log(data.message) // FEEEEDBAAAACK
-            localStorage.removeItem('id')
+            this.$root.saveFeedback(message="You are logged out. See you later!")
             localStorage.removeItem('jwt_token')
-            router.push({name: 'home'})
+            localStorage.removeItem('id')
+            setInterval(() => { this.dots = this.dots + '.'}, 10)
+            setTimeout(() => {
+              router.push({name: 'home'})
+            }, 200);
+            
         } else {
             console.error(data.erros)
             router.pop()
@@ -314,35 +360,33 @@ const Profile = Vue.component('profile', {
   <div>
     <div class="card shadow mb-5">
     
-      <div class="card-top rounded border-primary"></div>
-
       <div class="row no-gutters p-4" style="width: auto;">
 
-        <div class="col-md-3">  
+        <div class="col-md-3 bio-box">  
           <img 
             :src="$uploads + profile.profile_photo" 
-            class="card-img" 
+            class="card-img h-100" 
             alt="profile-picture"
           >
         </div>
 
-        <div class="col-md-9 d-flex">
+        <div class="col-md-9 d-flex pt-2">
           <div class="card-body w-50">
-            <h3 class="card-title text-dark font-weight-bold ">{{ profile.fullname }}</h3>
+            <h3 class="card-title text-dark font-weight-bold ">{{ fullname }}</h3>
             <div class="text-secondary">
 
               <div class="d-flex align-items-center mb-2">
-                <i class="fas fa-map-marker-alt"></i>
-                <p class="card-text ml-3">{{ profile.email }}</p>
+                <i class="fa-fw fas fa-map-marker-alt"></i>
+                <p class="card-text ml-3">{{ profile.location }}</p>
               </div>
               
               <div class="d-flex align-items-center mb-2">
-                <i class="far fa-envelope card-text"></i>
-                <p class="card-text ml-3">{{ profile.location }}</p>
+                <i class="fa-fw far fa-envelope card-text"></i>
+                <p class="card-text ml-3">{{ profile.email }}</p>
               </div>
 
               <div class="d-flex align-items-center">
-                <i class="far fa-calendar"></i>
+                <i class="fa-fw far fa-calendar"></i>
                 <p class="card-text ml-3">joined on {{ profile.joined_on }}</p> 
               </div>
 
@@ -365,8 +409,12 @@ const Profile = Vue.component('profile', {
               </div>
             </div>  
 
-            <div>
-              <button @click="follow()" class="btn btn-primary btn-block">Follow</button>
+            <div v-if="!selfFollow">
+              <button @click="follow()" class="btn btn-success btn-block" v-if="following">Following</button>
+              <button @click="follow()" class="btn btn-primary btn-block" v-else>Follow</button>
+            </div>
+            <div v-else>
+              <button @click="$goTo('new-post')"class="btn btn-primary btn-block"><i class="fa-fw fas fa-plus"></i>New Post</button>
             </div>
           </div>
         </div>
@@ -377,11 +425,12 @@ const Profile = Vue.component('profile', {
     <div
       v-for="(row, index) in photorows"
       :key="index"
+      class="mb-4"
     >
       <div class="card-deck">
         <div v-for="(post, pindex) in row" :key="pindex">
           <div 
-            class="card"
+            class="card clickable"
             v-if="post"
             @click="viewPost(post)"
           >
@@ -410,6 +459,12 @@ const Profile = Vue.component('profile', {
       }
   },
   computed: {
+    fullname () {
+      return this.profile ? this.profile.firstname + ' ' + this.profile.lastname : ''
+    },
+    selfFollow () {
+      return this.$root.uid == this.$route.params.user_id
+    },
     rows () {
         if (this.profile.posts) {
             return Math.floor((this.profile.posts.length - 1) / this.rowlen) + 1
@@ -423,7 +478,7 @@ const Profile = Vue.component('profile', {
             for (let index = 0; index < this.rows; index++) {
                 prows.push([])
                 for (let i = 0; i < this.rowlen; i++) {
-                prows[index].push(this.profile.posts[(index * this.rowlen) + i])
+                  prows[index].push(this.profile.posts[(index * this.rowlen) + i])
                 }
             }
         }
@@ -439,9 +494,29 @@ const Profile = Vue.component('profile', {
   },
   methods: {
     follow () {
-        if (this.followers !== null) {
-            this.followers = this.followers + 1
-        }
+      const uid = this.$route.params.user_id
+      const body = JSON.stringify({user_id: parseInt(this.$root.uid), follower_id: parseInt(uid)})
+      console.log(body)
+        fetch(`/api/users/${uid}/follow`, {
+          method: "POST", 
+          body: body,
+          headers: {
+              'Content-Type' : 'application/json',
+              'X-CSRFToken': token,
+              'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+          },
+          credentials: 'same-origin'
+        })
+        .then(res => this.$processResponse(res))
+        .then(data => {
+          if (this.$validData(data)) {
+            // success
+            this.getFollowerCount(uid)
+          } else {
+            console.log("ERROR")
+            this.$root.saveFeedback(message=data.message, erros=data.errors, code=data.code)
+          }
+        })
     },
     getFollowerCount (uid) {
         fetch(`/api/users/${uid}/follow`, {
@@ -453,12 +528,13 @@ const Profile = Vue.component('profile', {
             credentials: 'same-origin'
         })
         .then(res => {
-            return res.json()
+            return this.$processResponse(res)
         })
         .then(data => {
             console.log(data.followers)
             if (data.followers !== null) {
                 this.followers = data.followers
+                this.following = data.following
             } else {
                 console.log("Error retrieving follower count")
                 this.followers = 0
@@ -473,7 +549,7 @@ const Profile = Vue.component('profile', {
     // fetch profile          
     const uid = this.$route.params.user_id
     console.log(`/api/users/${uid}`)   
-    fetch(`${this.$baseurl}/api/users/${uid}`, {
+    fetch(`/api/users/${uid}`, {
         method: "GET",
         headers: {
             'X-CSRFToken': token,
@@ -483,12 +559,17 @@ const Profile = Vue.component('profile', {
     })
     .then(res => {
         console.log(res)
-        return res.json()
+        return this.$processResponse(res)
     })
     .then(data => {
-        console.log('PROFILE')
-        console.log(data)
+
+      if (this.$validData(data)) {
+        //success
         this.profile = data
+      } else {
+        this.$root.saveFeedback(message=data.message, erros=data.errors, code=data.code)
+      }
+        
         
     })
     this.getFollowerCount(uid)
@@ -547,19 +628,16 @@ const NewPost = Vue.component('new-post', {
                 },
                 credentials: 'same-origin'
             })
-            .then(res => {
-                return res.json()
-            })
+            .then(res => this.$processResponse(res))
             .then(data => {
                 console.log(data)
-                if (!data.errors) {
+                if (this.$validData(data)) {
                     // success
-                    console.log(data.message) // FEEDBACK
+                    this.$root.saveFeedback(message=data.message)
+                    router.push({name: 'explore'})
                 } else {
-                    console.error(data.errors)
+                    this.$root.saveFeedback(message=data.message, error=data.error, code=data.code)
                 }
-                
-                router.push({name: 'home'})
             })
         }
     }
@@ -567,13 +645,17 @@ const NewPost = Vue.component('new-post', {
 
 const Post = Vue.component('post', {
     template: `
-    <div class="center-form">
-        <div class="card" v-if="post">
-            <img :src="$uploads + post.photo" alt="post photo" class="card-img-top">
+    <div class="center-form d-flex justify-content-center">
+        <div class="card post-card" v-if="post">
+            <img 
+              :src="$uploads + post.photo" 
+              alt="post photo" 
+              class="card-img-top"
+            >
             <div class="card-body">
                 <div class="mt-3 mb-2">
-                    <i @click="like()" class="far fa-heart" v-if="!liked"></i>
-                    <i @click="like()" class="fas fa-heart" v-else></i>
+                    <i @click="like()" class="far fa-heart clickable" v-if="!liked"></i>
+                    <i @click="like()" class="fas fa-heart clickable" v-else></i>
                     {{ likes }}
                 </div>
                 <p>{{ post.description }}</p>
@@ -610,13 +692,14 @@ const Post = Vue.component('post', {
                 },
                 credentials: 'same-origin'
             })
-            .then(res => res.json())
+            .then(res => this.$processResponse(res))
             .then(data => {
-                if (!data.errors) {
+                if (this.$validData(data)) {
                     // success
                     console.log(data.message)
                     this.likes = data.likes
                 } else {
+                    this.$root.saveFeedback(message=data.message, errors=data.errors, code=data.errors)
                     console.error(data.errors)
                 }
             })
@@ -626,6 +709,7 @@ const Post = Vue.component('post', {
     mounted () {
         this.post_id = this.$route.params.post_id
         this.post = this.$route.params.post
+
         fetch(`/api/posts/${this.post_id}/likes`, {
             method: "GET",
             headers: {
@@ -634,13 +718,14 @@ const Post = Vue.component('post', {
             },
             credentials: 'same-origin'
         })
-        .then(res => {
-            return res.json()
-        })
+        .then(res => this.$processResponse(res))
         .then(data => {
-            console.log(data)
-            this.likes = data.likes
-            this.liked = data.liked
+            if (this.$validData(data)) {
+              this.likes = data.likes
+              this.liked = data.liked
+            } else {
+              this.$root.saveFeedback(message=data.message, errors=data.errors, code=data.errors)
+            }            
         })
     }
 });
@@ -648,7 +733,11 @@ const Post = Vue.component('post', {
 const NotFound = Vue.component('not-found', {
   template: `
   <div>
-      <h1>404 - Not Found</h1>
+      <div class="not-found">
+        <h1>404 - Not Found</h1>
+        <h2>This page does not exist</h2>
+        <button class="btn btn-dark btn-lg" @click="$goTo('home')">Return Home</button>
+      </div>
   </div>
   `,
   data: function () {
@@ -671,12 +760,34 @@ const router = new VueRouter({
       {name: 'post', path:"/post/:post_id", component: Post, props: true},
 
       // This is a catch all route in case none of the above matches
-      {path: "*", component: NotFound}
+      {name: 'Unknown', path: "*", component: NotFound}
   ]
 });
 
-// Instantiate our main Vue Instance
+// Instantiate our main Vue Instance as well as global values/methods. ref w/ $root
 let app = new Vue({
   el: "#app",
-  router
+  router,
+  data: {
+    uid: localStorage.getItem('id'),
+    code: null,
+    message: null,
+    errors: null
+  },
+  methods: {
+    clearFeedback () {
+      this.saveFeedback()
+    },
+    saveFeedback (message = null, errors = null, code = null) {
+      // this.uid = localStorage.getItem('id'),
+      this.code = code,
+      this.message = message,
+      this.errors = errors
+    }
+  },
+  watch: {
+    $route () {
+      this.uid = localStorage.getItem('id')
+    }
+  }
 });
