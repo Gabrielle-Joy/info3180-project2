@@ -1,21 +1,36 @@
-Vue.prototype.$errors = []
-Vue.prototype.$messages = []
-Vue.mixin({
-    data () {
-        return {
-            errorList: ['EROORRRRS!!'],
-            messageList: []
-        }   
-    },
-    computed: {
-        errors () {
-            return this.errorList
-        },
-        messages () {
-            return this.messageList
-        }
-    }
-})
+/* util functions */
+Vue.prototype.$validData = function(data) {
+  return !data.errors && !data.code ? true : false
+}
+
+Vue.prototype.$processResponse = function(res) {
+  if (res.status === 401) {
+    // delete auth varibales
+    console.log(res)
+    localStorage.removeItem('jwt_token')
+    localStorage.removeItem('id')
+    res.json()
+    .then(data => {
+      let errors = [data.message]
+      if (data.errors) errors.push(data.errors)
+      console.log(data)
+      this.$root.saveFeedback(message="Please login to continue.", errors=errors, code=data.code)
+    })
+    router.push({name: 'login'})
+    return {}
+  } else {
+    return res.json()
+  }
+  
+}
+
+Vue.prototype.$goTo = function(route, params={}) {
+  router.push({name: route, params: params})
+}
+
+/* util values */
+Vue.prototype.$uploads = '/static/uploads/'
+
 /* Add your Application JavaScript */
 Vue.component('app-header', {
     template: `
@@ -34,51 +49,76 @@ Vue.component('app-header', {
                   <li class="nav-item active">
                     <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
                   </li>
-                  <li class="nav-item">
+                  <li class="nav-item" v-if="$root.uid">
                     <a class="nav-link" href="/explore">Explore</a>
                   </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="/users/:user_id">My Profile</a>
+                  <li class="nav-item" v-if="$root.uid">
+                    <a class="nav-link" :href="'/users/' + $root.uid">My Profile</a>
                   </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="/logout">Logout</a>
+                  <li class="nav-item" v-if="$root.uid">
+                    <a class="nav-link" href="/logout" @click="$root.uid=null">Logout</a>
+                  </li>
+                  <li class="nav-item" v-if="!$root.uid">
+                    <a class="nav-link" href="/login">Login</a>
                   </li>
                 </ul>
                 </ul>
               </div>
             </nav>
         </header>    
-    `,
-    data: function() {
-      return {};
-    }
+    `
 });
 
+Vue.component('app-footer', {
+    template: `
+        <footer class="mt-5">
+            <div class="container">
+                <hr>  
+                <p>Photogram. {{ year }} Team Resumate.</p>
+            </div>
+        </footer>
+    `,
+    data: function() {
+        return {
+            year: (new Date).getFullYear()
+        }
+    }
+});
 
 /* Feedback container - container for displaying error/success messages*/
 const Feedback = Vue.component('feedback', {
     template: `
-    <div>
-        <div 
-            class="bg-light border border-danger rounded text-danger p-2" 
-            v-if="errors.length > 0 && messages.length == 0"
-        >
-        <ul class="">
-            <li v-for="(error, index) in errors" :key="index">{{ error }}</li>
-        </ul>
-        </div>
+    <div class="mb-3">
+        <div v-if="$root.errors || $root.message">
+          <div 
+              class="bg-light border border-danger rounded text-danger p-2" 
+              v-if="$root.code || $root.errors"
+          >
+            <p>{{ $root.message }}</p>
+            <ul class="" v-if="$root.errors">
+                <li v-for="(error, index) in $root.errors " :key="index">{{ error }}</li>
+            </ul>
+          </div>
 
-        <div 
-            class="border border-success rounded text-success p-2" 
-            v-if="messages.length > 0 && errors.length == 0"
-        >
-        <ul>
-            <li v-for="(message, index) in messages" :key="index">{{ message }}</li>
-        </ul>
+          <div 
+              class="bg-light border border-success rounded text-success p-2" 
+              v-else
+          >
+            <p>{{ $root.message }}</p>
+            <ul class="" v-if="$root.errors">
+                <li v-for="(error, index) in $root.errors " :key="index">{{ error }}</li>
+            </ul>
+          </div>
         </div>
     </div>
-    `
-})
+    `,
+    data () {
+      return {
+        errors: [],
+        messages: []
+      }
+    }
+});
 
 /* Router Components */
 const Home = Vue.component('home', {
@@ -119,7 +159,7 @@ const Home = Vue.component('home', {
 const Register = Vue.component('register', {
   template: `
   <div class="center-form">
-    <div class="page-header text-shadow">
+    <div class="page-header">
       <h3>Register</h3>
     </div>
 
@@ -159,8 +199,8 @@ const Register = Vue.component('register', {
           ></textarea>
         </div>
         <div class="form-group">
-          <label for="profile_photo">Photo</label>
-          <input type="file" class="form-control-file" name="profile_photo" id="profile_photo">
+          <label for="profile_picture">Photo</label>
+          <input type="file" class="form-control-file" name="profile_picture" id="profile_picture">
         </div>
         <div class="mt-2">
           <hr>
@@ -178,13 +218,9 @@ const Register = Vue.component('register', {
     register_user () {
         el = document.getElementById('register-form')
         form = new FormData(el)
-        // this.errorList = ["KILL"]
-        // console.log(this.errors)
-        // this.messages = ["SUCCESSSSS!!"]
-        // console.log(messages)
 
         // send api request
-        fetch('api/users/register', {
+        fetch('/api/users/register', {
             method: "POST",
             body: form,
             headers: {
@@ -192,20 +228,18 @@ const Register = Vue.component('register', {
             },
             credentials: 'same-origin'
         })
-        .then(res => {
-            return res.json()
-        })
-        .then(res => {
-            console.log(res)
-            if(res.status == 201) {
-                // successful register
-                // messages = [res.message]
-                // messages = ["SUCCESSSSS!!"]
-                router.push({name: 'login'})
+        .then(res => this.$processResponse(res))
+        .then(data => {
+            console.log(data)
+            if (this.$validData(data) ) {
+              // success
+              console.log(data.message)
+              this.$root.saveFeedback(message=data.message)
+              router.push({name: 'login'})
             } else {
-                // failed register
-                // errors = ["ERROR!!"]
-                // errors = [res.errors]
+              // failed register
+              this.$root.saveFeedback(message=data.message, erros=data.errors, code=data.code)
+              console.log(data.errors)
             }
         })
     }
@@ -245,13 +279,9 @@ const Login = Vue.component('login', {
     login_user () {
       el = document.getElementById('login-form')
       form = new FormData(el)
-      // this.errorList = ["KILL"]
-      // console.log(this.errors)
-      // this.messages = ["SUCCESSSSS!!"]
-      // console.log(messages)
 
       // send api request
-      fetch('api/users/login', {
+      fetch('api/auth/login', {
           method: "POST",
           body: form,
           headers: {
@@ -259,33 +289,58 @@ const Login = Vue.component('login', {
           },
           credentials: 'same-origin'
       })
-      .then(res => {
-          return res.json()
-      })
-      .then(res => {
-          console.log(res)
-          if(res.status == 201) {
-              // successful register
-              // messages = [res.message]
-              // messages = ["SUCCESSSSS!!"]
-              router.push({name: 'home'})
-          } else {
-              // failed register
-              // errors = ["ERROR!!"]
-              // errors = [res.errors]
-          }
+      .then(res => this.$processResponse(res))
+      .then(data => {
+        console.log(data)
+        if (this.$validData(data)) {
+            // successful login
+            localStorage.setItem('jwt_token', data.token);
+            localStorage.setItem('id', data.user_id);
+            this.$root.saveFeedback(message="Successful login")
+            router.push({name: 'home'})
+        } else {
+            // failed login
+            this.$root.saveFeedback(message=data.message, erros=data.errors, code=data.code)
+        }          
       })
     }
   }
 });
+
 const Logout = Vue.component('logout', {
   template: `
-  <div>
-      <h1>Logout: may need sumn special</h1>
-  </div>
+  <div>Logging out {{ dots }}</div>
   `,
-  data: function () {
-      return {}
+  data () {
+      return {dots: '.'}
+  },
+  mounted () {
+    fetch(`/api/auth/logout`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': token,
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+        },
+        credentials: 'same-origin'
+    })
+    .then(res => this.$processResponse(res))
+    .then(data => {
+        console.log(data)
+        if (this.$validData(data)) {
+            // successful logout
+            this.$root.saveFeedback(message="You are logged out. See you later!")
+            localStorage.removeItem('jwt_token')
+            localStorage.removeItem('id')
+            setInterval(() => { this.dots = this.dots + '.'}, 10)
+            setTimeout(() => {
+              router.push({name: 'home'})
+            }, 200);
+            
+        } else {
+            console.error(data.erros)
+            router.pop()
+        }
+    })
   }
 });
 
@@ -300,56 +355,43 @@ const Explore = Vue.component('explore', {
   }
 });
 
-const User = Vue.component('user', {
-  template: `
-  <div>
-      <h1>User:I will find you</h1>
-  </div>
-  `,
-  data: function () {
-      return {}
-  }
-});
-
 const Profile = Vue.component('profile', {
   template: `
   <div>
     <div class="card shadow mb-5">
     
-      <div class="card-top rounded border-primary"></div>
-
       <div class="row no-gutters p-4" style="width: auto;">
 
-        <div class="col-md-2">
+        <div class="col-md-3 bio-box">  
           <img 
-            src="https://api.time.com/wp-content/uploads/2017/12/terry-crews-person-of-year-2017-time-magazine-2.jpg" 
-            class="card-img" 
+            :src="$uploads + profile.profile_photo" 
+            class="card-img h-100" 
             alt="profile-picture"
           >
         </div>
 
-        <div class="col-md-10 d-flex">
+        <div class="col-md-9 d-flex pt-2">
           <div class="card-body w-50">
-            <h3 class="card-title text-dark font-weight-bold ">{{ 'Terry' + " " + 'Crews' }}</h3>
+            <h3 class="card-title text-dark font-weight-bold ">{{ fullname }}</h3>
             <div class="text-secondary">
 
               <div class="d-flex align-items-center mb-2">
-                <i class="fas fa-map-marker-alt"></i>
-                <p class="card-text ml-3">{{ 'tcrews@mail.com' }}</p>
+                <i class="fa-fw fas fa-map-marker-alt"></i>
+                <p class="card-text ml-3">{{ profile.location }}</p>
               </div>
               
               <div class="d-flex align-items-center mb-2">
-                <i class="far fa-envelope card-text"></i>
-                <p class="card-text ml-3">{{ 'Portmore' }}</p>
+                <i class="fa-fw far fa-envelope card-text"></i>
+                <p class="card-text ml-3">{{ profile.email }}</p>
               </div>
 
               <div class="d-flex align-items-center">
-                <i class="far fa-calendar"></i>
-                <p class="card-text ml-3">joined on {{ 'May 18, 2020' }}</p> 
+                <i class="fa-fw far fa-calendar"></i>
+                <p class="card-text ml-3">joined on {{ profile.joined_on }}</p> 
               </div>
 
               <div class="d-flex align-items-center mt-3">
-                <p>{{ 'Bio Here...' }}</p>
+                <p>{{ profile.biography }}</p>
               </div>
             </div>
           </div>
@@ -357,18 +399,22 @@ const Profile = Vue.component('profile', {
           <div class="card-body p-5">
             <div class="d-flex mb-5">
               <div class="w-50 text-center">
-                <p>{{ posts.length }}</p>
+                <p>{{ postCount }}</p>
                 <p class="text-muted">Posts</p>
               </div>
 
               <div class="w-50 text-center">
-                <p>{{ followers }}</p>
+                <p>{{ followerCount }}</p>
                 <p class="text-muted">Followers</p>
               </div>
             </div>  
 
-            <div>
-              <button @click="follow()" class="btn btn-primary btn-block">Follow</button>
+            <div v-if="!selfFollow">
+              <button @click="follow()" class="btn btn-success btn-block" v-if="following">Following</button>
+              <button @click="follow()" class="btn btn-primary btn-block" v-else>Follow</button>
+            </div>
+            <div v-else>
+              <button @click="$goTo('new-post')"class="btn btn-primary btn-block"><i class="fa-fw fas fa-plus"></i>New Post</button>
             </div>
           </div>
         </div>
@@ -379,17 +425,19 @@ const Profile = Vue.component('profile', {
     <div
       v-for="(row, index) in photorows"
       :key="index"
+      class="mb-4"
     >
       <div class="card-deck">
         <div v-for="(post, pindex) in row" :key="pindex">
           <div 
-            class="card"
+            class="card clickable"
             v-if="post"
+            @click="viewPost(post)"
           >
             <img 
               class="profile-post"
-              :src="post.photo" 
-              :alt="'photo'"
+              :src="$uploads + post.photo" 
+              :alt="post.photo"
             >
           </div>
 
@@ -404,115 +452,292 @@ const Profile = Vue.component('profile', {
   `,
   data: function () {
       return {
-        followers: 10,
+        followers: null,
+        following: false,
         rowlen: 3,
-        posts: [
-          {
-            photo: 'https://pbs.twimg.com/media/Dwv-JlDUUAA-8FK.jpg',
-            caption: 'THis is a post about a dog'
-          },
-          {
-            photo: 'https://www.biography.com/.image/t_share/MTE5NDg0MDYwNjkzMjY3OTgz/terry-crews-headshot-600x600jpg.jpg',
-            caption: "Headshot I took for my first acting audition"
-          }
-        ]
+        profile: {}
       }
   },
   computed: {
+    fullname () {
+      return this.profile ? this.profile.firstname + ' ' + this.profile.lastname : ''
+    },
+    selfFollow () {
+      return this.$root.uid == this.$route.params.user_id
+    },
     rows () {
-      return Math.floor((this.posts.length - 1) / this.rowlen) + 1
+        if (this.profile.posts) {
+            return Math.floor((this.profile.posts.length - 1) / this.rowlen) + 1
+        } else {
+            return 0
+        }
     },
     photorows () {
-      const prows = []
-      for (let index = 0; index < this.rows; index++) {
-        prows.push([])
-        for (let i = 0; i < this.rowlen; i++) {
-          prows[index].push(this.posts[(index * this.rowlen) + i])
+        const prows = []
+        if (this.profile.posts) {
+            for (let index = 0; index < this.rows; index++) {
+                prows.push([])
+                for (let i = 0; i < this.rowlen; i++) {
+                  prows[index].push(this.profile.posts[(index * this.rowlen) + i])
+                }
+            }
         }
-      }
-      return prows
-    }
+        return prows
+    },
+    postCount () {
+        return this.profile.posts ? this.profile.posts.length : '?'
+    },
+    followerCount () {
+        return this.followers != null ? this.followers : '?'
+    },
+    
   },
   methods: {
     follow () {
-        this.followers = this.followers + 1
+      const uid = this.$route.params.user_id
+      const body = JSON.stringify({user_id: parseInt(this.$root.uid), follower_id: parseInt(uid)})
+      console.log(body)
+        fetch(`/api/users/${uid}/follow`, {
+          method: "POST", 
+          body: body,
+          headers: {
+              'Content-Type' : 'application/json',
+              'X-CSRFToken': token,
+              'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+          },
+          credentials: 'same-origin'
+        })
+        .then(res => this.$processResponse(res))
+        .then(data => {
+          if (this.$validData(data)) {
+            // success
+            this.getFollowerCount(uid)
+          } else {
+            console.log("ERROR")
+            this.$root.saveFeedback(message=data.message, erros=data.errors, code=data.code)
+          }
+        })
+    },
+    getFollowerCount (uid) {
+        fetch(`/api/users/${uid}/follow`, {
+            method: "GET",  
+            headers: {
+                'X-CSRFToken': token,
+                'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+            },
+            credentials: 'same-origin'
+        })
+        .then(res => {
+            return this.$processResponse(res)
+        })
+        .then(data => {
+            console.log(data.followers)
+            if (data.followers !== null) {
+                this.followers = data.followers
+                this.following = data.following
+            } else {
+                console.log("Error retrieving follower count")
+                this.followers = 0
+            }
+        })
+    },
+    viewPost (post) {
+        router.push({name: 'post', params: {post_id: post.id, post: post}})
     }
+  },
+  mounted () {
+    // fetch profile          
+    const uid = this.$route.params.user_id
+    console.log(`/api/users/${uid}`)   
+    fetch(`/api/users/${uid}`, {
+        method: "GET",
+        headers: {
+            'X-CSRFToken': token,
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+        },
+        credentials: 'same-origin'
+    })
+    .then(res => {
+        console.log(res)
+        return this.$processResponse(res)
+    })
+    .then(data => {
+
+      if (this.$validData(data)) {
+        //success
+        this.profile = data
+      } else {
+        this.$root.saveFeedback(message=data.message, erros=data.errors, code=data.code)
+      }
+        
+        
+    })
+    this.getFollowerCount(uid)
+
   }
 });
 
-const Post = Vue.component('post', {
-  template: `
-  <div class="center-form">
-    <div class="page-header">
-      <h3>New Post</h3>
-    </div>
-
-    <div class="border border-info p-3 bg-light rounded shadow">
-      <form @submit.prevent="login_user()" id="post-form">
-        <div class="form-group">
-          <label for="photo">Photo</label>
-          <input type="file" class="form-control-file" name="photo" id="photo">
+const NewPost = Vue.component('new-post', {
+    template: `
+    <div class="center-form">
+        <div class="page-header">
+        <h3>New Post</h3>
         </div>
 
-        <div class="form-group">
-          <label for="caption">Caption</label>
-          <textarea 
-            name="caption" id="caption" 
-            rows="5" 
-            class="form-control" 
-            placeholder="Enter a caption for your post"
-          ></textarea>
-        </div>
-        
-      </form>
-    </div>
-  </div>
-  `,
-  data: function () {
-      return {}
-  },
-  methods: {
-    login_user () {
-      el = document.getElementById('post-form')
-      form = new FormData(el)
-      // this.errorList = ["KILL"]
-      // console.log(this.errors)
-      // this.messages = ["SUCCESSSSS!!"]
-      // console.log(messages)
+        <div class="border border-info p-3 bg-light rounded shadow">
+        <form @submit.prevent="make_post()" id="post-form">
+            <div class="form-group">
+            <label for="post_photo">Photo</label>
+            <input type="file" class="form-control-file" name="post_photo" id="post_photo">
+            </div>
 
-      // send api request
-      fetch(`api/users/${user_id}/posts`, {
-          method: "POST",
-          body: form,
-          headers: {
-              'X-CSRFToken': token
-          },
-          credentials: 'same-origin'
-      })
-      .then(res => {
-          return res.json()
-      })
-      .then(res => {
-          console.log(res)
-          if(res.status == 201) {
-              // successful register
-              // messages = [res.message]
-              // messages = ["SUCCESSSSS!!"]
-              router.push({name: 'home'})
-          } else {
-              // failed register
-              // errors = ["ERROR!!"]
-              // errors = [res.errors]
-          }
-      })
+            <div class="form-group">
+            <label for="bio">Description</label>
+            <textarea 
+                name="bio" id="bio" 
+                rows="5" 
+                class="form-control" 
+                placeholder="Enter a caption/description for your post"
+            ></textarea>
+            </div>
+
+            <div class="mt-2">
+            <button type="submit" class="btn btn-info btn-lg">Post!</button>
+            </div>
+            
+        </form>
+        </div>
+    </div>
+    `,
+    data: function () {
+        return {}
+    },
+    methods: {
+        make_post () {
+            el = document.getElementById('post-form')
+            form = new FormData(el)
+
+            // send api request
+            const uid = localStorage.getItem('id')
+            fetch(`/api/users/${uid}/posts`, {
+                method: "POST",
+                body: form,
+                headers: {
+                    'X-CSRFToken': token,
+                    'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+                },
+                credentials: 'same-origin'
+            })
+            .then(res => this.$processResponse(res))
+            .then(data => {
+                console.log(data)
+                if (this.$validData(res)) {
+                    // success
+                    this.$root.saveFeedback(message=res.message)
+                    router.push({name: 'explore'})
+                } else {
+                    this.$root.saveFeedback(message=res.message, error=res.error, code=res.code)
+                }
+            })
+        }
     }
-  }
+});
+
+const Post = Vue.component('post', {
+    template: `
+    <div class="center-form d-flex justify-content-center">
+        <div class="card post-card" v-if="post">
+            <img 
+              :src="$uploads + post.photo" 
+              alt="post photo" 
+              class="card-img-top"
+            >
+            <div class="card-body">
+                <div class="mt-3 mb-2">
+                    <i @click="like()" class="far fa-heart clickable" v-if="!liked"></i>
+                    <i @click="like()" class="fas fa-heart clickable" v-else></i>
+                    {{ likes }}
+                </div>
+                <p>{{ post.description }}</p>
+                
+                <div>
+                    <small class="text-muted">{{ post.created_on }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    `,
+    data () {
+        return {
+            post_id: null,
+            post: null,
+            likes: null,
+            liked: false
+        }
+    },
+    methods: {
+        like () {
+            const body = JSON.stringify({
+                user_id: parseInt(localStorage.getItem('id')),
+                post_id: this.post_id
+            })
+            
+            fetch(`/api/posts/${this.post_id}/like`, {
+                method: "POST",
+                body: body,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': token,
+                    'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+                },
+                credentials: 'same-origin'
+            })
+            .then(res => this.$processResponse(res))
+            .then(data => {
+                if (this.$validData(data)) {
+                    // success
+                    console.log(data.message)
+                    this.likes = data.likes
+                } else {
+                    this.$root.saveFeedback(message=data.message, errors=data.errors, code=data.errors)
+                    console.error(data.errors)
+                }
+            })
+            this.liked = !this.liked
+        }
+    },
+    mounted () {
+        this.post_id = this.$route.params.post_id
+        this.post = this.$route.params.post
+
+        fetch(`/api/posts/${this.post_id}/likes`, {
+            method: "GET",
+            headers: {
+                'X-CSRFToken': token,
+                'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+            },
+            credentials: 'same-origin'
+        })
+        .then(res => this.$processResponse(res))
+        .then(data => {
+            if (this.$validData(data)) {
+              this.likes = data.likes
+              this.liked = data.liked
+            } else {
+              this.$root.saveFeedback(message=data.message, errors=data.errors, code=data.errors)
+            }            
+        })
+    }
 });
 
 const NotFound = Vue.component('not-found', {
   template: `
   <div>
-      <h1>404 - Not Found</h1>
+      <div class="not-found">
+        <h1>404 - Not Found</h1>
+        <h2>This page does not exist</h2>
+        <button class="btn btn-dark btn-lg" @click="$goTo('home')">Return Home</button>
+      </div>
   </div>
   `,
   data: function () {
@@ -525,21 +750,44 @@ const NotFound = Vue.component('not-found', {
 const router = new VueRouter({
   mode: 'history',
   routes: [
-      {path: "/", component: Home},
-      {path: "/register", component: Register},
-      {path: "/login", component: Login},
-      {path: "/logout", component: Logout},
-      {path: "/explore", component: Explore},
-      {path: "/users/:user_id", component: Profile},
-      {path: "/posts/new", component: Post},
+      {name: 'home', path: "/", component: Home},
+      {name: 'register', path: "/register", component: Register},
+      {name: 'login', path: "/login", component: Login},
+      {name: 'logout', path: "/logout", component: Logout},
+      {name: 'explore', path: "/explore", component: Explore},
+      {name: 'profile', path: "/users/:user_id", component: Profile},
+      {name: 'new-post', path: "/posts/new", component: NewPost},
+      {name: 'post', path:"/post/:post_id", component: Post, props: true},
 
       // This is a catch all route in case none of the above matches
-      {path: "*", component: NotFound}
+      {name: 'Unknown', path: "*", component: NotFound}
   ]
 });
 
-// Instantiate our main Vue Instance
+// Instantiate our main Vue Instance as well as global values/methods. ref w/ $root
 let app = new Vue({
   el: "#app",
-  router
+  router,
+  data: {
+    uid: localStorage.getItem('id'),
+    code: null,
+    message: null,
+    errors: null
+  },
+  methods: {
+    clearFeedback () {
+      this.saveFeedback()
+    },
+    saveFeedback (message = null, errors = null, code = null) {
+      // this.uid = localStorage.getItem('id'),
+      this.code = code,
+      this.message = message,
+      this.errors = errors
+    }
+  },
+  watch: {
+    $route () {
+      this.uid = localStorage.getItem('id')
+    }
+  }
 });

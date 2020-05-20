@@ -16,22 +16,22 @@
 
         <div class="col-md-10 d-flex">
           <div class="card-body w-50">
-            <h3 class="card-title text-dark font-weight-bold ">{{ 'Terry' + " " + 'Crews' }}</h3>
+            <h3 class="card-title text-dark font-weight-bold ">{{ profile.fullname }}</h3>
             <div class="text-secondary">
 
               <div class="d-flex align-items-center mb-2">
                 <i class="fas fa-map-marker-alt"></i>
-                <p class="card-text ml-3">{{ 'tcrews@mail.com' }}</p>
+                <p class="card-text ml-3">{{ profile.email }}</p>
               </div>
               
               <div class="d-flex align-items-center mb-2">
                 <i class="far fa-envelope card-text"></i>
-                <p class="card-text ml-3">{{ 'Portmore' }}</p>
+                <p class="card-text ml-3">{{ profile.location }}</p>
               </div>
 
               <div class="d-flex align-items-center">
                 <i class="far fa-calendar"></i>
-                <p class="card-text ml-3">joined on {{ 'May 18, 2020' }}</p> 
+                <p class="card-text ml-3">joined on {{ profile.joined_on }}</p> 
               </div>
 
               <div class="d-flex align-items-center mt-3">
@@ -43,7 +43,7 @@
           <div class="card-body p-5">
             <div class="d-flex mb-5">
               <div class="w-50 text-center">
-                <p>{{ posts.length }}</p>
+                <p>{{ profile.posts.length }}</p>
                 <p class="text-muted">Posts</p>
               </div>
 

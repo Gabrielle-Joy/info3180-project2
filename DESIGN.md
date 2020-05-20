@@ -8,9 +8,18 @@ E.g.
 ```
 fetch('/api/secure', {
     'headers': {
-    // JWT requires the Authorization schema to be `Bearer`
-    instead of `Basic`
         'Authorization': 'Bearer {JWT}'
     }
 })
+```
+
+## Faulty API Call Response Structure
+If the front end makes an invalid call to an endpoint, this will be the response structure
+
+```
+{
+    code: ''
+    message: ''
+    errors: [list of errors]
+}
 ```

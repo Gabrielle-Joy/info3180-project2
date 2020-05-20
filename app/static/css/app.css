@@ -20,14 +20,15 @@ footer  {
 }
 
 .center-form {
-    padding-top: 5rem;
+    padding-top: 2rem;
     padding-left: 10rem;
     padding-right: 10rem;
-    padding-bottom: 5rem;
+    /* padding-bottom: 5rem; */
 }
 
 .profile-post {
     height: 25vw;
+     width: 25vw;
 }
 
 /*  MAINLY HOMEPAGE     */
@@ -73,3 +74,30 @@ footer  {
     flex: 1;
     margin: 3px;
   }
+
+.post-card {
+    /* height: 35vw; */
+    width: 35vw;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.profile-photo {
+    /* height: 20vw; */
+    height: 25vw;
+}
+
+.bio-box {
+    height: 20vw;
+    overflow: hidden;
+}
+
+.not-found {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+    flex-direction: column;
+}
