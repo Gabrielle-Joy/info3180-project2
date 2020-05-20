@@ -709,7 +709,7 @@ const NotFound = Vue.component('not-found', {
       <div class="not-found">
         <h1>404 - Not Found</h1>
         <h2>This page does not exist</h2>
-        <button class="btn btn-dark btn-lg">Return Home</button>
+        <button class="btn btn-dark btn-lg" @click="$goTo('home')">Return Home</button>
       </div>
   </div>
   `,
