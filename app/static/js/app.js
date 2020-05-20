@@ -607,12 +607,12 @@ const NewPost = Vue.component('new-post', {
             .then(res => this.$processResponse(res))
             .then(data => {
                 console.log(data)
-                if (this.$validData(res)) {
+                if (this.$validData(data)) {
                     // success
-                    this.$root.saveFeedback(message=res.message)
+                    this.$root.saveFeedback(message=data.message)
                     router.push({name: 'explore'})
                 } else {
-                    this.$root.saveFeedback(message=res.message, error=res.error, code=res.code)
+                    this.$root.saveFeedback(message=data.message, error=data.error, code=data.code)
                 }
             })
         }
