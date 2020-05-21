@@ -303,6 +303,8 @@ const Login = Vue.component('login', {
             // successful login
             sessionStorage.setItem('jwt_token', data.token);
             sessionStorage.setItem('id', data.user_id);
+            console.log(sessionStorage.getItem('jwt_token'));
+            console.log(sessionStorage.getItem('id'));
             this.$root.saveFeedback(message="Successful login")
             router.push({name: 'home'})
         } else {
