@@ -26,6 +26,8 @@ Vue.prototype.$processResponse = function(res) {
 }
 
 Vue.prototype.$goTo = function(route, params={}) {
+  console.log("Params GoTo")
+  console.log(params)
   router.push({name: route, params: params})
 }
 
@@ -48,19 +50,19 @@ Vue.component('app-header', {
               <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav ml-auto">
                   <li class="nav-item active">
-                    <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+                    <a class="nav-link" @click="$goTo('home')">Home <span class="sr-only">(current)</span></a>
                   </li>
                   <li class="nav-item active" v-if="$root.uid">
-                    <a class="nav-link" href="/explore">Explore</a>
+                    <a class="nav-link" @click="$goTo('explore')">Explore</a>
                   </li>
                   <li class="nav-item active" v-if="$root.uid">
-                    <a class="nav-link" :href="'/users/' + $root.uid">My Profile</a>
+                    <a class="nav-link" @click="$goTo('profile', {'user_id':$root.uid})">My Profile</a>
                   </li>
                   <li class="nav-item active" v-if="$root.uid">
-                    <a class="nav-link" href="/logout" @click="$root.uid=null">Logout</a>
+                    <a class="nav-link" @click="$goTo('logout')">Logout</a>
                   </li>
                   <li class="nav-item active" v-if="!$root.uid">
-                    <a class="nav-link" href="/login">Login</a>
+                    <a class="nav-link" @click="$goTo('login')">Login</a>
                   </li>
                 </ul>
                 </ul>
