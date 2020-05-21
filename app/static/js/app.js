@@ -347,7 +347,7 @@ const Logout = Vue.component('logout', {
             
         } else {
             console.error(data.erros)
-            router.pop()
+            router.go(-1)
         }
     })
   }
