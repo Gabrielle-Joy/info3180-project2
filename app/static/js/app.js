@@ -26,6 +26,7 @@ Vue.prototype.$processResponse = function(res) {
 }
 
 Vue.prototype.$goTo = function(route, params={}) {
+  console.log({name: route, params: params})
   router.push({name: route, params: params})
 }
 
@@ -54,7 +55,8 @@ Vue.component('app-header', {
                     <a class="nav-link" @click="$goTo('explore')">Explore</a>
                   </li>
                   <li class="nav-item active" v-if="$root.uid">
-                    <a class="nav-link" @click="$goTo('profile', {'user_id':$root.uid})">My Profile</a>
+                  {{ JSON.stringify({user_id:$root.uid}) }}
+                    <a class="nav-link" @click="$goTo('profile', {user_id:$root.uid})">My Profile</a>
                   </li>
                   <li class="nav-item active" v-if="$root.uid">
                     <a class="nav-link" @click="$goTo('logout')">Logout</a>
@@ -357,7 +359,6 @@ const Profile = Vue.component('profile', {
   template: `
   <div>
     <div class="card shadow mb-5">
-    
       <div class="row no-gutters p-4" style="width: auto;">
 
         <div class="col-md-3 bio-box">  
@@ -448,6 +449,7 @@ const Profile = Vue.component('profile', {
     </div>
   </div>
   `,
+  props: ['user_id'],
   data: function () {
       return {
         followers: null,
@@ -461,7 +463,7 @@ const Profile = Vue.component('profile', {
       return this.profile ? this.profile.firstname + ' ' + this.profile.lastname : ''
     },
     selfFollow () {
-      return this.$root.uid == this.$route.params.user_id
+      return this.$root.uid == this.user_id
     },
     rows () {
         if (this.profile.posts) {
@@ -492,7 +494,7 @@ const Profile = Vue.component('profile', {
   },
   methods: {
     follow () {
-      const uid = this.$route.params.user_id
+      const uid = this.user_id
       const body = JSON.stringify({user_id: parseInt(this.$root.uid), follower_id: parseInt(uid)})
       console.log(body)
         fetch(`/api/users/${uid}/follow`, {
@@ -542,37 +544,44 @@ const Profile = Vue.component('profile', {
     viewPost (post) {
         const uid = this.$route.params.user_id
         router.push({name: 'post', params: {id: post.id}})
+    },
+    getProfile () {
+      // fetch profile          
+      const uid = this.$route.params.user_id
+      // console.log(`/api/users/${uid}`)   
+      fetch(`/api/users/${uid}`, {
+          method: "GET",
+          headers: {
+              'X-CSRFToken': token,
+              'Authorization': 'Bearer ' + sessionStorage.getItem('jwt_token')
+          },
+          credentials: 'same-origin'
+      })
+      .then(res => {
+          // console.log(res)
+          return this.$processResponse(res)
+      })
+      .then(data => {
+
+        if (this.$validData(data)) {
+          //success
+          this.profile = data
+        } else {
+          this.$root.saveFeedback(message=data.message, erros=data.errors, code=data.code)
+        }
+          
+          
+      })
+      this.getFollowerCount(uid)
     }
   },
   mounted () {
-    // fetch profile          
-    const uid = this.$route.params.user_id
-    // console.log(`/api/users/${uid}`)   
-    fetch(`/api/users/${uid}`, {
-        method: "GET",
-        headers: {
-            'X-CSRFToken': token,
-            'Authorization': 'Bearer ' + sessionStorage.getItem('jwt_token')
-        },
-        credentials: 'same-origin'
-    })
-    .then(res => {
-        // console.log(res)
-        return this.$processResponse(res)
-    })
-    .then(data => {
-
-      if (this.$validData(data)) {
-        //success
-        this.profile = data
-      } else {
-        this.$root.saveFeedback(message=data.message, erros=data.errors, code=data.code)
-      }
-        
-        
-    })
-    this.getFollowerCount(uid)
-
+    this.getProfile()
+  },
+  watch: {
+    user_id () {
+      this.getProfile()
+    }
   }
 });
 
@@ -842,7 +851,7 @@ const router = new VueRouter({
       {name: 'login', path: "/login", component: Login},
       {name: 'logout', path: "/logout", component: Logout},
       {name: 'explore', path: "/explore", component: Explore},
-      {name: 'profile', path: "/users/:user_id", component: Profile},
+      {name: 'profile', path: "/users/:user_id", component: Profile, props: true},
       {name: 'new-post', path: "/posts/new", component: NewPost},
       {name: 'post', path:"/post/:id", component: Post, props: true},
 
@@ -856,7 +865,7 @@ let app = new Vue({
   el: "#app",
   router,
   data: {
-    uid: sessionStorage.getItem('id'),
+    uid: parseInt(sessionStorage.getItem('id')),
     code: null,
     message: null,
     errors: null,
@@ -876,7 +885,7 @@ let app = new Vue({
   },
   watch: {
     $route () {
-      this.uid = sessionStorage.getItem('id')
+      this.uid = parseInt(sessionStorage.getItem('id'))
       this.clicks += 1
       if (this.clicks > 1) this.clearFeedback()
     }
