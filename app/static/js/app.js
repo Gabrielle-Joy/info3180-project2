@@ -136,9 +136,13 @@ const Home = Vue.component('home', {
         </h5>
         
         <p class="card-text share">Share photos of your favourite moments with friends, family and the world.</p>
-        <div class="reg-log-btn">
+        <div class="reg-log-btn" v-if="!$root.uid">
           <button @click="redirectToRegister()" class="btn btns btn-success reg-log-btn">Register</button>
           <button @click="redirectToLogin()" class="btn btns btn-primary reg-log-btn">Login</button>
+        </div>
+        <div class="reg-log-btn" v-else>
+          <button @click="$goTo('explore')" class="btn btns btn-success reg-log-btn btn-block">Explore</button>
+          <button @click="$goTo('new-post')"class="btn btns btn-primary"><i class="fa-fw fas fa-plus"></i>New Post</button>
         </div>
       </div>
     </div>

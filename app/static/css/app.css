@@ -66,7 +66,7 @@ footer  {
   }
 
   .reg-log-btn {
-    text-align: center;
+    justify-content: center;
     display: flex;
     margin-bottom: 20px;
   }
