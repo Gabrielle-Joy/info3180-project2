@@ -13,7 +13,7 @@ Vue.prototype.$processResponse = function(res) {
     res.json()
     .then(data => {
       let errors = [data.message]
-      if (data.errors.length > 0) errors.push(data.errors)
+      if (data.errors && data.errors.length > 0) errors.push(data.errors)
       console.log(data)
       this.$root.saveFeedback(message="Please login to continue.", errors=errors, code=data.code)
     })
