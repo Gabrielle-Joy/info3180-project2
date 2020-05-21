@@ -642,6 +642,10 @@ const Post = Vue.component('post', {
     template: `
     <div class="center-form d-flex justify-content-center">
         <div class="card post-card" v-if="post">
+            <div>
+                <i class="fas fa-user"></i>
+                <p @click="user()"> post.user </p>
+            </div>
             <img 
               :src="$uploads + post.photo" 
               alt="post photo" 
