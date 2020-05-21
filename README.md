@@ -55,3 +55,6 @@ python flask-migrate.py db upgrade
 
 ## More info
 A description of how the API should work can be found [here](https://photogram.docs.apiary.io/#)
+
+## Heroku app
+https://serene-beach-34314.herokuapp.com/
