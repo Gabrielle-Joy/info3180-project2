@@ -792,28 +792,26 @@ const Explore = Vue.component('explore', {
       return {
         posts: null
       }
-  }, methods: {
-        
-    },
-    mounted () {
+  }, 
+  mounted () {
 
-        fetch(`/api/posts`, {
-            method: "GET",
-            headers: {
-                'X-CSRFToken': token,
-                'Authorization': 'Bearer ' + sessionStorage.getItem('jwt_token')
-            },
-            credentials: 'same-origin'
-        })
-        .then(res => this.$processResponse(res))
-        .then(data => {
-          if (this.$validData(data)) {
-            console.log(data.posts)
-            this.posts = data.posts
-          } else {
-            this.$root.saveFeedback(message=data.message, erros=data.errors, code=data.code)
-          }
-        })
+      fetch(`/api/posts`, {
+          method: "GET",
+          headers: {
+              'X-CSRFToken': token,
+              'Authorization': 'Bearer ' + sessionStorage.getItem('jwt_token')
+          },
+          credentials: 'same-origin'
+      })
+      .then(res => this.$processResponse(res))
+      .then(data => {
+        if (this.$validData(data)) {
+          console.log(data.posts)
+          this.posts = data.posts.reverse()
+        } else {
+          this.$root.saveFeedback(message=data.message, erros=data.errors, code=data.code)
+        }
+      })
     }
 });
 
