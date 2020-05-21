@@ -77,8 +77,8 @@ footer  {
   }
 
 .post-card {
-    /* height: 35vw; */
-    width: 35vw;
+    /* max-height: 25vw; */
+    width: 25vw;
 }
 
 .clickable {
@@ -101,4 +101,20 @@ footer  {
     align-items: center;
     height: 80vh;
     flex-direction: column;
+}
+
+.fit-img{
+  width: 100%;
+  object-fit: cover;
+  overflow: hidden;
+  /* height: 300px; only if you want fixed height */
+}
+
+.post-header {
+  height: 5vw;
+}
+
+.post-photo {
+  height: 20vw;
+  width: 20px;
 }

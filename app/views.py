@@ -220,6 +220,7 @@ def get_num_followers(user_id):
 @app.route('/api/posts', methods=["GET"])
 @auth_required
 def all_posts(post_id=None):
+    user_id = getUserID()
     data = []
 
     if post_id == None:
@@ -232,13 +233,15 @@ def all_posts(post_id=None):
 
     for post in posts:
         likes = Like.query.filter_by(post_id=post.id).count()
+        liked = True if Like.query.filter_by(user_id=user_id, post_id=post.id).first() else False
         data.append({
             "id": post.id,
             "user_id": post.user_id,
             "photo": post.photo,
             "caption": post.caption,
             "created_on": post.created_on.strftime("%b %d, %Y"),
-            "likes": likes
+            "likes": likes,
+            "liked": liked
         })
 
     return {'posts': data}

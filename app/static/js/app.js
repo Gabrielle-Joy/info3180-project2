@@ -537,7 +537,8 @@ const Profile = Vue.component('profile', {
         })
     },
     viewPost (post) {
-        router.push({name: 'post', params: {post_id: post.id, post: post}})
+        const uid = this.$route.params.user_id
+        router.push({name: 'post', params: {post_id: post.id}})
     }
   },
   mounted () {
@@ -641,23 +642,26 @@ const NewPost = Vue.component('new-post', {
 const Post = Vue.component('post', {
     template: `
     <div class="center-form d-flex justify-content-center">
-        <div class="card post-card" v-if="post">
-            <div>
-                <i class="fas fa-user"></i>
-                <p @click="user()"> post.user </p>
+        <div class="card post-card" v-if="post && user">
+            <div class="card-header d-flex align-items-center post-header clickable" @click="viewUser()">
+                <img
+                class="rounded-circle h-100" 
+                :src="$uploads + user.profile_photo"
+                alt="u"> 
+                <span class="ml-2">{{user.username}} </span>
             </div>
             <img 
               :src="$uploads + post.photo" 
               alt="post photo" 
-              class="card-img-top"
+              class="card-img-top profile-photo"
             >
             <div class="card-body">
                 <div class="mt-3 mb-2">
-                    <i @click="like()" class="far fa-heart clickable" v-if="!liked"></i>
+                    <i @click="like()" class="far fa-heart clickable" v-if="!post.liked"></i>
                     <i @click="like()" class="fas fa-heart clickable" v-else></i>
-                    {{ likes }}
+                    {{ post.likes }}
                 </div>
-                <p>{{ post.description }}</p>
+                <p>{{ post.caption }}</p>
                 
                 <div>
                     <small class="text-muted">{{ post.created_on }}</small>
@@ -666,22 +670,22 @@ const Post = Vue.component('post', {
         </div>
     </div>
     `,
+    props: ['id', 'postdata'],
     data () {
         return {
-            post_id: null,
-            post: null,
-            likes: null,
-            liked: false
+            user: null,
+            url: 'https://lh3.googleusercontent.com/BRpxymdQTtK2EE1RGf3SbotOBqziMBBXllZxgOTmTbNsVhu_UaZErz5LpiW9SDQiQZ9b6g=s85',
+            post: null
         }
     },
     methods: {
         like () {
             const body = JSON.stringify({
                 user_id: parseInt(localStorage.getItem('id')),
-                post_id: this.post_id
+                post_id: this.post.id
             })
             
-            fetch(`/api/posts/${this.post_id}/like`, {
+            fetch(`/api/posts/${this.post.id}/like`, {
                 method: "POST",
                 body: body,
                 headers: {
@@ -696,70 +700,94 @@ const Post = Vue.component('post', {
                 if (this.$validData(data)) {
                     // success
                     console.log(data.message)
-                    this.likes = data.likes
+                    this.post.likes = data.likes
                 } else {
                     this.$root.saveFeedback(message=data.message, errors=data.errors, code=data.errors)
                     console.error(data.errors)
                 }
             })
-            this.liked = !this.liked
+            this.post.liked = !this.post.liked
+        },
+        getPost () {
+          console.log(this.post_id)
+          fetch(`/api/posts/${this.post_id}`, {
+              method: "GET",
+              headers: {
+                  'X-CSRFToken': token,
+                  'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+              },
+              credentials: 'same-origin'
+          })
+          .then(res => this.$processResponse(res))
+          .then(data => {
+              if (this.$validData(data)) {
+                // console.log(data.posts[0])
+                this.post = data.posts[0]
+                this.getUserInfo()
+                console.log(this.post)
+              } else {
+                this.$root.saveFeedback(message=data.message, errors=data.errors, code=data.errors)
+              }            
+          })
+        },
+        getUserInfo () {
+          const uid = this.post.user_id
+          console.log(uid)
+          fetch(`/api/users/${uid}`, {
+              method: "GET",
+              headers: {
+                  'X-CSRFToken': token,
+                  'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+              },
+              credentials: 'same-origin'
+          })
+          .then(res => this.$processResponse(res))
+          .then(data => {
+              if (this.$validData(data)) {
+                console.log(data)
+                this.user = data
+              } else {
+                this.$root.saveFeedback(message=data.message, errors=data.errors, code=data.errors)
+              }            
+          })
+        },
+        viewUser() {
+          this.$goTo('profile', {user_id: this.post.user_id})
         }
     },
     mounted () {
-        this.post_id = this.$route.params.post_id
-        this.post = this.$route.params.post
-
-        fetch(`/api/posts/${this.post_id}/likes`, {
-            method: "GET",
-            headers: {
-                'X-CSRFToken': token,
-                'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
-            },
-            credentials: 'same-origin'
-        })
-        .then(res => this.$processResponse(res))
-        .then(data => {
-            if (this.$validData(data)) {
-              this.likes = data.likes
-              this.liked = data.liked
-            } else {
-              this.$root.saveFeedback(message=data.message, errors=data.errors, code=data.errors)
-            }            
-        })
+        if(this.postdata) {
+          this.post = this.postdata
+          this.getUserInfo()
+        } else {
+          this.post_id = parseInt(id)
+          this.getPost()
+        } 
     }
 });
 
 const Explore = Vue.component('explore', {
   template: `
   <div>
-    <div v-for="post in posts">
-      <div class="center-form d-flex justify-content-center">
-        <div class="card post-card" v-if="post">
-            <img 
-              :src="$uploads + post.photo" 
-              alt="post photo" 
-              class="card-img-top"
-            >
-            <div class="card-body">
-                <div class="mt-3 mb-2">
-                    <i @click="like()" class="far fa-heart clickable" v-if="!post.liked"></i>
-                    <i @click="like()" class="fas fa-heart clickable" v-else></i>
-                    {{ likes }}
-                </div>
-                <p>{{ post.description }}</p>
-                
-                <div>
-                    <small class="text-muted">{{ post.created_on }}</small>
-                </div>
-            </div>
-        </div>
+    <div class="d-flex justify-content-center">
+      <div v-if="posts" class="mr-3">
+        <post v-for="(post, index) in posts" :key="index" :postdata="post"></post>
+      </div>
+      <div class="d-flex p-5"> 
+        <button 
+          @click="$goTo('new-post')"
+          class="btn btns btn-primary position-fixed"
+        >
+          <i class="fa-fw fas fa-plus"></i>
+          New Post
+        </button>
       </div>
     </div>
   </div>
   `,
   data: function () {
       return {
-        posts: []
+        posts: null
       }
   }, methods: {
         
@@ -776,8 +804,12 @@ const Explore = Vue.component('explore', {
         })
         .then(res => this.$processResponse(res))
         .then(data => {
-          console.log(data);
-            this.posts = data.posts;       
+          if (this.$validData(data)) {
+            console.log(data.posts)
+            this.posts = data.posts
+          } else {
+            this.$root.saveFeedback(message=data.message, erros=data.errors, code=data.code)
+          }
         })
     }
 });
