@@ -779,7 +779,8 @@ let app = new Vue({
     uid: sessionStorage.getItem('id'),
     code: null,
     message: null,
-    errors: null
+    errors: null,
+    clicks: 0
   },
   methods: {
     clearFeedback () {
@@ -787,14 +788,17 @@ let app = new Vue({
     },
     saveFeedback (message = null, errors = null, code = null) {
       // this.uid = sessionStorage.getItem('id'),
-      this.code = code,
-      this.message = message,
+      this.code = code
+      this.message = message
       this.errors = errors
+      this.clicks = 0
     }
   },
   watch: {
     $route () {
       this.uid = sessionStorage.getItem('id')
+      this.clicks += 1
+      if (this.clicks > 1) this.clearFeedback()
     }
   }
 });
