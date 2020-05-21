@@ -38,8 +38,8 @@ Vue.prototype.$uploads = '/static/uploads/'
 Vue.component('app-header', {
     template: `
         <header>
-            <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-              <a class="navbar-brand" href="/">
+            <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top nav-point">
+              <a class="navbar-brand logo-text" @click="$goTo('home')">
                 <img src="../static/images/interface.png" width="30" height="30" class="d-inline-block align-top" alt="mkk"/>
                 Photogram
               </a>
@@ -48,7 +48,7 @@ Vue.component('app-header', {
               </button>
 
               <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav ml-auto">
+                <ul class="navbar-nav ml-auto nav-point">
                   <li class="nav-item active">
                     <a class="nav-link" @click="$goTo('home')">Home <span class="sr-only">(current)</span></a>
                   </li>

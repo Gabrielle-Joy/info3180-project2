@@ -7,6 +7,15 @@ body {
     background-color: rgba(238, 238, 255, 1);
 }
 
+.nav-point > * > a, .nav-point > a {
+    cursor: pointer;
+}
+
+.logo-text {
+    color: white !important;
+    font-weight: bolder;
+}
+
 footer  {
     margin-top: 20px;
     /* padding-top: 20px; */
