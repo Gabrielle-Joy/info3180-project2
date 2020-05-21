@@ -344,17 +344,6 @@ const Logout = Vue.component('logout', {
   }
 });
 
-const Explore = Vue.component('explore', {
-  template: `
-  <div>
-      <h1>Dora di explora!</h1>
-  </div>
-  `,
-  data: function () {
-      return {}
-  }
-});
-
 const Profile = Vue.component('profile', {
   template: `
   <div>
@@ -726,6 +715,59 @@ const Post = Vue.component('post', {
             } else {
               this.$root.saveFeedback(message=data.message, errors=data.errors, code=data.errors)
             }            
+        })
+    }
+});
+
+const Explore = Vue.component('explore', {
+  template: `
+  <div>
+    <div v-for="post in posts">
+      <div class="center-form d-flex justify-content-center">
+        <div class="card post-card" v-if="post">
+            <img 
+              :src="$uploads + post.photo" 
+              alt="post photo" 
+              class="card-img-top"
+            >
+            <div class="card-body">
+                <div class="mt-3 mb-2">
+                    <i @click="like()" class="far fa-heart clickable" v-if="!post.liked"></i>
+                    <i @click="like()" class="fas fa-heart clickable" v-else></i>
+                    {{ likes }}
+                </div>
+                <p>{{ post.description }}</p>
+                
+                <div>
+                    <small class="text-muted">{{ post.created_on }}</small>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  `,
+  data: function () {
+      return {
+        posts: []
+      }
+  }, methods: {
+        
+    },
+    mounted () {
+
+        fetch(`/api/posts`, {
+            method: "GET",
+            headers: {
+                'X-CSRFToken': token,
+                'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+            },
+            credentials: 'same-origin'
+        })
+        .then(res => this.$processResponse(res))
+        .then(data => {
+          console.log(data);
+            this.posts = data.posts;       
         })
     }
 });
