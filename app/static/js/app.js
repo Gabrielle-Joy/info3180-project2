@@ -55,7 +55,6 @@ Vue.component('app-header', {
                     <a class="nav-link" @click="$goTo('explore')">Explore</a>
                   </li>
                   <li class="nav-item active" v-if="$root.uid">
-                  {{ JSON.stringify({user_id:$root.uid}) }}
                     <a class="nav-link" @click="$goTo('profile', {user_id:$root.uid})">My Profile</a>
                   </li>
                   <li class="nav-item active" v-if="$root.uid">
