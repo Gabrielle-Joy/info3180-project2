@@ -44,10 +44,10 @@ footer  {
 
 
   .home-image {
-      float: left;
-      border-radius: .25rem;
-      padding-top: 0.4rem;
-      padding-right: 1rem;
+      /* float: left; */
+      /* border-radius: .25rem; */
+      /* padding-top: 0.4rem; */
+      /* padding-right: 1rem; */
   }
 
   .home-card {

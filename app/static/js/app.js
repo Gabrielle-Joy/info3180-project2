@@ -123,11 +123,12 @@ const Feedback = Vue.component('feedback', {
 /* Router Components */
 const Home = Vue.component('home', {
   template: `
-  <div class="centered">
-    <div class="home-image">
-      <img src="../static/images/dark-labs.jpg" width="270" height="270" alt="black girl in orange crew t-shirt"/>
+  <div class="row">
+    <div class="col-sm-1"></div>
+    <div class="col-sm-5">
+      <img src="../static/images/dark-labs.jpg" alt="Tahj-Mahj" class="img-fluid rounded"/>
     </div>
-    <div class="card home-card" style="width: 18rem;">
+    <div class="card home-card col-sm-5">
       <div class="card-body">
         <h5 class="card-title curly">
         <img src="../static/images/interface.png" class="nav-logo d-inline-block align-top" width="30" height="30" alt="Photogram logo"/>
@@ -141,6 +142,7 @@ const Home = Vue.component('home', {
         </div>
       </div>
     </div>
+    <div class="col-sm-1"></div>
   </div>
   `,
   data: function () {
