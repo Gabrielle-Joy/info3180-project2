@@ -682,7 +682,7 @@ const Post = Vue.component('post', {
     methods: {
         like () {
             const body = JSON.stringify({
-                user_id: parseInt(localStorage.getItem('id')),
+                user_id: parseInt(sessionStorage.getItem('id')),
                 post_id: this.post.id
             })
             
@@ -715,7 +715,7 @@ const Post = Vue.component('post', {
               method: "GET",
               headers: {
                   'X-CSRFToken': token,
-                  'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+                  'Authorization': 'Bearer ' + sessionStorage.getItem('jwt_token')
               },
               credentials: 'same-origin'
           })
@@ -738,7 +738,7 @@ const Post = Vue.component('post', {
               method: "GET",
               headers: {
                   'X-CSRFToken': token,
-                  'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+                  'Authorization': 'Bearer ' + sessionStorage.getItem('jwt_token')
               },
               credentials: 'same-origin'
           })
