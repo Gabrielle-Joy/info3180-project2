@@ -26,8 +26,6 @@ Vue.prototype.$processResponse = function(res) {
 }
 
 Vue.prototype.$goTo = function(route, params={}) {
-  console.log("Params GoTo")
-  console.log(params)
   router.push({name: route, params: params})
 }
 
@@ -540,7 +538,7 @@ const Profile = Vue.component('profile', {
             return this.$processResponse(res)
         })
         .then(data => {
-            console.log(data.followers)
+            // console.log(data.followers)
             if (data.followers !== null) {
                 this.followers = data.followers
                 this.following = data.following
@@ -557,7 +555,7 @@ const Profile = Vue.component('profile', {
   mounted () {
     // fetch profile          
     const uid = this.$route.params.user_id
-    console.log(`/api/users/${uid}`)   
+    // console.log(`/api/users/${uid}`)   
     fetch(`/api/users/${uid}`, {
         method: "GET",
         headers: {
@@ -567,7 +565,7 @@ const Profile = Vue.component('profile', {
         credentials: 'same-origin'
     })
     .then(res => {
-        console.log(res)
+        // console.log(res)
         return this.$processResponse(res)
     })
     .then(data => {
